@@ -9,14 +9,14 @@ describe('CMakeFormatter', () => {
     describe('Basic Formatting', () => {
         it('should format a simple command', () => {
             const input = 'PROJECT(MyProject)';
-            const output = formatCMake(input);
+            const output = formatCMake(input, { commandCase: 'lowercase' });
             
             assert.strictEqual(output.trim(), 'project(MyProject)');
         });
 
         it('should lowercase command names', () => {
             const input = 'CMAKE_MINIMUM_REQUIRED(VERSION 3.10)';
-            const output = formatCMake(input);
+            const output = formatCMake(input, { commandCase: 'lowercase' });
             
             assert.ok(output.includes('cmake_minimum_required'));
             assert.ok(!output.includes('CMAKE_MINIMUM_REQUIRED'));
@@ -34,6 +34,20 @@ describe('CMakeFormatter', () => {
             const output = formatCMake(input);
             
             assert.strictEqual(output.trim(), 'endfunction()');
+        });
+
+        it('should preserve command case when unchanged (default)', () => {
+            const input = 'PROJECT(MyProject)';
+            const output = formatCMake(input);
+            
+            assert.strictEqual(output.trim(), 'PROJECT(MyProject)');
+        });
+
+        it('should uppercase command names when configured', () => {
+            const input = 'project(MyProject)';
+            const output = formatCMake(input, { commandCase: 'uppercase' });
+            
+            assert.strictEqual(output.trim(), 'PROJECT(MyProject)');
         });
     });
 
@@ -70,8 +84,8 @@ endif()`;
             const output = formatCMake(input);
             
             const lines = output.split('\n');
-            const ifLine = lines.find(l => l.includes('if(WIN32)'));
-            const elseifLine = lines.find(l => l.includes('elseif(UNIX)'));
+            const ifLine = lines.find(l => l.includes('if') && l.includes('WIN32'));
+            const elseifLine = lines.find(l => l.includes('elseif'));
             const elseLine = lines.find(l => l.includes('else()'));
             const endifLine = lines.find(l => l.includes('endif()'));
             
@@ -82,7 +96,7 @@ endif()`;
             assert.ok(endifLine && !endifLine.startsWith(' '));
             
             // Messages inside should be indented
-            const messageLine = lines.find(l => l.includes('message("windows")'));
+            const messageLine = lines.find(l => l.includes('message') && l.includes('windows'));
             assert.ok(messageLine && messageLine.startsWith('    '));
         });
 
@@ -103,7 +117,7 @@ endif()`;
             const input = `if(TRUE)
 message("hello")
 endif()`;
-            const output = formatCMake(input, { useSpaces: false });
+            const output = formatCMake(input, { useTabs: true });
             
             // Should have a tab instead of 4 spaces
             const lines = output.split('\n');
@@ -146,6 +160,31 @@ project(Test)`;
             const output = formatCMake(input);
             
             assert.ok(output.includes('# inline comment'));
+        });
+
+        it('should preserve inline comments in multi-line commands', () => {
+            const input = `target_compile_options(\${TARGET} PRIVATE
+    -D_FORTIFY_SOURCE=0 # Disable _FORTIFY_SOURCE
+)`;
+            const output = formatCMake(input);
+            
+            assert.ok(output.includes('# Disable _FORTIFY_SOURCE'));
+        });
+    });
+
+    describe('Multi-line Preservation', () => {
+        it('should preserve multi-line format when original is multi-line', () => {
+            const input = `target_link_options(\${TARGET} PRIVATE 
+    -mwindows 
+    -static)`;
+            const output = formatCMake(input);
+            
+            const lines = output.split('\n');
+            // Should have multiple lines (not collapsed to one)
+            assert.ok(lines.length > 1);
+            // Each argument should be on its own line
+            assert.ok(lines.some(l => l.includes('-mwindows')));
+            assert.ok(lines.some(l => l.includes('-static')));
         });
     });
 
@@ -274,7 +313,7 @@ IF(WIN32)
     TARGET_LINK_LIBRARIES(myapp ws2_32)
 ENDIF()`;
         
-        const output = formatCMake(input);
+        const output = formatCMake(input, { commandCase: 'lowercase' });
         
         // Commands should be lowercase
         assert.ok(output.includes('cmake_minimum_required'));

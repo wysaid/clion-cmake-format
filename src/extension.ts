@@ -5,18 +5,47 @@
  */
 
 import * as vscode from 'vscode';
-import { formatCMake, FormatterOptions } from './formatter';
+import { formatCMake, FormatterOptions, CommandCase } from './formatter';
 
 /**
  * Read formatter options from VSCode configuration
  */
-function getFormatterOptions(): FormatterOptions {
+function getFormatterOptions(): Partial<FormatterOptions> {
     const config = vscode.workspace.getConfiguration('clionCMakeFormatter');
     
     return {
-        lineLength: config.get<number>('lineLength', 120),
+        // Tab and Indent
+        useTabs: config.get<boolean>('useTabs', false),
+        tabSize: config.get<number>('tabSize', 4),
         indentSize: config.get<number>('indentSize', 4),
-        useSpaces: config.get<boolean>('useSpaces', true)
+        continuationIndentSize: config.get<number>('continuationIndentSize', 4),
+        keepIndentOnEmptyLines: config.get<boolean>('keepIndentOnEmptyLines', false),
+
+        // Spacing - Before Parentheses
+        spaceBeforeCommandDefinitionParentheses: config.get<boolean>('spaceBeforeCommandDefinitionParentheses', false),
+        spaceBeforeCommandCallParentheses: config.get<boolean>('spaceBeforeCommandCallParentheses', false),
+        spaceBeforeIfParentheses: config.get<boolean>('spaceBeforeIfParentheses', true),
+        spaceBeforeForeachParentheses: config.get<boolean>('spaceBeforeForeachParentheses', true),
+        spaceBeforeWhileParentheses: config.get<boolean>('spaceBeforeWhileParentheses', true),
+
+        // Spacing - Inside Parentheses
+        spaceInsideCommandDefinitionParentheses: config.get<boolean>('spaceInsideCommandDefinitionParentheses', false),
+        spaceInsideCommandCallParentheses: config.get<boolean>('spaceInsideCommandCallParentheses', false),
+        spaceInsideIfParentheses: config.get<boolean>('spaceInsideIfParentheses', false),
+        spaceInsideForeachParentheses: config.get<boolean>('spaceInsideForeachParentheses', false),
+        spaceInsideWhileParentheses: config.get<boolean>('spaceInsideWhileParentheses', false),
+
+        // Blank Lines
+        maxBlankLines: config.get<number>('maxBlankLines', 2),
+
+        // Command Case
+        commandCase: config.get<CommandCase>('commandCase', 'unchanged'),
+
+        // Wrapping
+        lineLength: config.get<number>('lineLength', 120),
+        alignMultiLineArguments: config.get<boolean>('alignMultiLineArguments', false),
+        alignMultiLineParentheses: config.get<boolean>('alignMultiLineParentheses', false),
+        alignControlFlowParentheses: config.get<boolean>('alignControlFlowParentheses', false),
     };
 }
 
