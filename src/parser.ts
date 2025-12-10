@@ -60,6 +60,8 @@ export interface CommandNode extends ASTNode {
     name: string;
     arguments: ArgumentInfo[];
     trailingComment?: string;
+    /** Whether the original command spans multiple lines */
+    isMultiLine: boolean;
 }
 
 /**
@@ -70,6 +72,8 @@ export interface ArgumentInfo {
     quoted: boolean;
     bracket: boolean;
     bracketLevel?: number;
+    /** Comment attached to this argument (inline comment after the argument) */
+    inlineComment?: string;
 }
 
 /**
@@ -521,7 +525,7 @@ export class CMakeParser {
 
     private parseCommand(): CommandNode | BlockNode {
         const nameToken = this.advance();
-        const commandName = nameToken.value.toLowerCase();
+        const commandName = nameToken.value; // Preserve original case
         const startLine = nameToken.line;
         
         this.skipWhitespace();
@@ -534,7 +538,8 @@ export class CMakeParser {
                 name: commandName,
                 arguments: [],
                 startLine,
-                endLine: startLine
+                endLine: startLine,
+                isMultiLine: false
             };
         }
         
@@ -557,17 +562,21 @@ export class CMakeParser {
             trailingComment = this.advance().value;
         }
         
+        // Determine if command spans multiple lines
+        const isMultiLine = endLine > startLine;
+        
         const command: CommandNode = {
             type: NodeType.Command,
             name: commandName,
             arguments: args,
             startLine,
             endLine,
-            trailingComment
+            trailingComment,
+            isMultiLine
         };
         
-        // Check if this is a block-starting command
-        if (CMakeParser.BLOCK_START_COMMANDS[commandName]) {
+        // Check if this is a block-starting command (case-insensitive)
+        if (CMakeParser.BLOCK_START_COMMANDS[commandName.toLowerCase()]) {
             return this.parseBlock(command);
         }
         
@@ -586,34 +595,43 @@ export class CMakeParser {
             }
             
             if (token.type === TokenType.Comment) {
-                // Comments within arguments are preserved
+                // Attach comment to the previous argument if there is one
+                if (args.length > 0 && !args[args.length - 1].inlineComment) {
+                    args[args.length - 1].inlineComment = token.value;
+                }
                 this.advance();
                 continue;
             }
             
+            let arg: ArgumentInfo | null = null;
+            
             if (token.type === TokenType.Argument) {
                 this.advance();
-                args.push({
+                arg = {
                     value: token.value,
                     quoted: false,
                     bracket: false
-                });
+                };
             } else if (token.type === TokenType.QuotedArgument) {
                 this.advance();
-                args.push({
+                arg = {
                     value: token.value,
                     quoted: true,
                     bracket: false
-                });
+                };
             } else if (token.type === TokenType.BracketArgument) {
                 this.advance();
-                args.push({
+                arg = {
                     value: token.value,
                     quoted: false,
                     bracket: true
-                });
+                };
             } else {
                 break;
+            }
+            
+            if (arg) {
+                args.push(arg);
             }
         }
         
@@ -621,7 +639,7 @@ export class CMakeParser {
     }
 
     private parseBlock(startCommand: CommandNode): BlockNode {
-        const blockType = startCommand.name;
+        const blockType = startCommand.name.toLowerCase(); // Use lowercase for block type matching
         const endCommandName = CMakeParser.BLOCK_START_COMMANDS[blockType];
         const body: ASTNode[] = [];
         
@@ -683,7 +701,8 @@ export class CMakeParser {
                 name: endCommandName,
                 arguments: [],
                 startLine: startCommand.endLine,
-                endLine: startCommand.endLine
+                endLine: startCommand.endLine,
+                isMultiLine: false
             },
             startLine: startCommand.startLine,
             endLine: startCommand.endLine
