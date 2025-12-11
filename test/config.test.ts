@@ -186,7 +186,7 @@ describe('Configuration File Support', () => {
         });
 
         it('should ignore whitespace in header comparison', () => {
-            const content = `//   ${PROJECT_URL}   
+            const content = `//   ${PROJECT_URL}
 {
     "indentSize": 8
 }`;

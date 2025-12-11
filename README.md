@@ -45,6 +45,21 @@ English | [简体中文](README.zh-CN.md)
 - Press `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (Mac)
 - Or right-click and select "Format Document"
 
+### Create Default Configuration File
+
+To quickly set up a project-specific configuration:
+
+1. Open any file in your project (or ensure a workspace folder is open)
+2. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+3. Type and select "CLion CMake Formatter: Create Default Configuration File"
+4. A `.cc-format.jsonc` file will be created in the project's git root directory with default settings
+
+The command automatically:
+- Finds the git root directory from the active document's location
+- Handles git submodules correctly
+- Falls back to workspace folders if no git repository is found
+- Uses the plugin's default configuration values
+
 ### Format on Save
 
 Add to your VSCode settings (`settings.json`):
@@ -122,6 +137,8 @@ The extension will automatically search for configuration files starting from th
 **Configuration File Names (in order of priority):**
 1. `.cc-format.jsonc`
 2. `.cc-format`
+
+You can create a default configuration file with all default settings by using the "CLion CMake Formatter: Create Default Configuration File" command from the Command Palette.
 
 ### VSCode Settings
 

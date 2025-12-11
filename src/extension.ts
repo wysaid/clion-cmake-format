@@ -6,8 +6,10 @@
  */
 
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { formatCMake, FormatterOptions, CommandCase } from './formatter';
-import { getConfigForDocument, clearConfigCache } from './config';
+import { getConfigForDocument, clearConfigCache, generateSampleConfig, DEFAULT_OPTIONS } from './config';
 
 // Track which validation warnings have been shown to avoid repetition
 const shownWarnings = new Set<string>();
@@ -152,6 +154,50 @@ function getFormatterOptions(document: vscode.TextDocument): Partial<FormatterOp
 }
 
 /**
+ * Find the git root directory starting from a given path
+ * Handles git submodules by checking .git file content
+ * @param startPath The path to start searching from
+ * @returns The git root path or null if not found
+ */
+function findGitRoot(startPath: string): string | null {
+    let currentPath = startPath;
+    const root = path.parse(currentPath).root;
+
+    while (currentPath.length >= root.length) {
+        const gitPath = path.join(currentPath, '.git');
+
+        if (fs.existsSync(gitPath)) {
+            const stats = fs.statSync(gitPath);
+
+            if (stats.isDirectory()) {
+                // Regular git repository
+                return currentPath;
+            } else if (stats.isFile()) {
+                // Git submodule - .git is a file pointing to the actual git directory
+                // Read the file to check if it's a valid submodule reference
+                try {
+                    const content = fs.readFileSync(gitPath, 'utf-8');
+                    // Valid submodule format: "gitdir: <path>"
+                    if (content.trim().startsWith('gitdir:')) {
+                        return currentPath;
+                    }
+                } catch {
+                    // If we can't read it, continue searching
+                }
+            }
+        }
+
+        const parentPath = path.dirname(currentPath);
+        if (parentPath === currentPath) {
+            break;
+        }
+        currentPath = parentPath;
+    }
+
+    return null;
+}
+
+/**
  * Document Formatting Provider for CMake files
  */
 class CMakeFormattingProvider implements vscode.DocumentFormattingEditProvider {
@@ -249,10 +295,83 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     );
 
+    // Register a command to create a default configuration file
+    const createConfigCommand = vscode.commands.registerCommand(
+        'clion-cmake-formatter.createConfig',
+        async () => {
+            let targetPath: string | undefined;
+
+            // Try to get path from active editor
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+                const documentPath = editor.document.uri.fsPath;
+                const gitRoot = findGitRoot(path.dirname(documentPath));
+                if (gitRoot) {
+                    targetPath = gitRoot;
+                }
+            }
+
+            // If no git root found from active editor, try workspace folders
+            if (!targetPath) {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (workspaceFolders && workspaceFolders.length > 0) {
+                    // Check each workspace folder for git root
+                    for (const folder of workspaceFolders) {
+                        const gitRoot = findGitRoot(folder.uri.fsPath);
+                        if (gitRoot) {
+                            targetPath = gitRoot;
+                            break;
+                        }
+                    }
+
+                    // If no git root found, use first workspace folder
+                    if (!targetPath) {
+                        targetPath = workspaceFolders[0].uri.fsPath;
+                    }
+                } else {
+                    vscode.window.showErrorMessage('No workspace folder or active document found');
+                    return;
+                }
+            }
+
+            const configPath = path.join(targetPath, '.cc-format.jsonc');
+
+            // Check if config file already exists
+            if (fs.existsSync(configPath)) {
+                const overwrite = await vscode.window.showWarningMessage(
+                    `Configuration file already exists at ${configPath}`,
+                    'Overwrite',
+                    'Cancel'
+                );
+                if (overwrite !== 'Overwrite') {
+                    return;
+                }
+            }
+
+            try {
+                // Generate config with default options
+                const content = generateSampleConfig(DEFAULT_OPTIONS);
+                fs.writeFileSync(configPath, content, 'utf-8');
+
+                // Open the created file
+                const doc = await vscode.workspace.openTextDocument(configPath);
+                await vscode.window.showTextDocument(doc);
+
+                vscode.window.showInformationMessage(
+                    `Configuration file created at ${configPath}`
+                );
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                vscode.window.showErrorMessage(`Failed to create configuration file: ${message}`);
+            }
+        }
+    );
+
     context.subscriptions.push(
         formattingDisposable,
         rangeFormattingDisposable,
-        formatCommand
+        formatCommand,
+        createConfigCommand
     );
 
     // Log activation

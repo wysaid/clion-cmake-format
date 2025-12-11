@@ -7,7 +7,10 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { FormatterOptions, DEFAULT_OPTIONS, CommandCase } from './formatter';
+import { FormatterOptions, DEFAULT_OPTIONS as FORMATTER_DEFAULT_OPTIONS, CommandCase } from './formatter';
+
+// Re-export DEFAULT_OPTIONS for convenience
+export { FORMATTER_DEFAULT_OPTIONS as DEFAULT_OPTIONS };
 
 /**
  * The project URL that identifies cc-format configuration files
@@ -483,7 +486,7 @@ export function getConfigForDocument(
  * Generate a sample configuration file content
  */
 export function generateSampleConfig(options: Partial<FormatterOptions> = {}): string {
-    const config = { ...DEFAULT_OPTIONS, ...options };
+    const config = { ...FORMATTER_DEFAULT_OPTIONS, ...options };
 
     const lines = [
         generateConfigHeader(),

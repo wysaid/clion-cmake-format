@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Create Default Configuration File Command**: New command to quickly create a `.cc-format.jsonc` configuration file in the project's git root directory
+  - Automatically finds git root from active document or workspace folders
+  - Correctly handles git submodules
+  - Generates configuration file with plugin's default settings
+  - Accessible via Command Palette: "CLion CMake Formatter: Create Default Configuration File"
+- **Git root detection**: Smart git repository detection that handles both regular repositories and submodules
+
 ### ⚠️ Breaking Changes
 
 - **Changed default `lineLength` from 120 to 0 (unlimited)**: The formatter will no longer wrap lines by default. This provides a better out-of-box experience that matches user expectations.

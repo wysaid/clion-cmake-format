@@ -49,6 +49,10 @@
             {
                 "command": "clion-cmake-formatter.formatDocument",
                 "title": "%command.formatDocument%"
+            },
+            {
+                "command": "clion-cmake-formatter.createConfig",
+                "title": "%command.createConfig%"
             }
         ],
         "configuration": {
