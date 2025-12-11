@@ -57,23 +57,6 @@
             }
         },
         {
-            "label": "Run all tests",
-            "type": "shell",
-            "command": "npm run test:unit",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test",
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": true
-            }
-        },
-        {
             "label": "npm: package",
             "type": "npm",
             "script": "package",
