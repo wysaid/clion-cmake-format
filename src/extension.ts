@@ -7,14 +7,22 @@
 import * as vscode from 'vscode';
 import { formatCMake, FormatterOptions, CommandCase } from './formatter';
 
+// Track which validation warnings have been shown to avoid repetition
+const shownWarnings = new Set<string>();
+
 /**
  * Validate numeric value within a range
  */
 function validateRange(value: number, min: number, max: number, name: string): number {
     if (value < min || value > max) {
-        vscode.window.showWarningMessage(
-            `${name} value ${value} is out of range [${min}, ${max}]. Using ${value < min ? 'minimum' : 'maximum'} value ${value < min ? min : max}.`
-        );
+        const warningKey = `${name}:${value}`;
+        // Only show warning once per session per config value
+        if (!shownWarnings.has(warningKey)) {
+            vscode.window.showWarningMessage(
+                `${name} value ${value} is out of range [${min}, ${max}]. Using ${value < min ? 'minimum' : 'maximum'} value ${value < min ? min : max}.`
+            );
+            shownWarnings.add(warningKey);
+        }
         return value < min ? min : max;
     }
     return value;
@@ -62,9 +70,13 @@ function validateLineLength(value: number): number {
 
     // Enforce minimum value for non-zero values
     if (value < MIN_LINE_LENGTH) {
-        vscode.window.showWarningMessage(
-            `lineLength value ${value} is too small. Using minimum value ${MIN_LINE_LENGTH}.`
-        );
+        const warningKey = `lineLength:${value}`;
+        if (!shownWarnings.has(warningKey)) {
+            vscode.window.showWarningMessage(
+                `lineLength value ${value} is too small. Using minimum value ${MIN_LINE_LENGTH}.`
+            );
+            shownWarnings.add(warningKey);
+        }
         return MIN_LINE_LENGTH;
     }
 

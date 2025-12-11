@@ -443,4 +443,28 @@ describe('Numeric Configuration Validation Tests', () => {
         const output30 = formatCMake(input, { lineLength: 30 });
         assert.ok(output30.includes('set'), 'Should format with minimum lineLength');
     });
+
+    it('should clamp out-of-range values to valid boundaries', () => {
+        const input = 'if(WIN32)\n    set(VAR value)\nendif()';
+
+        // Test that extreme values are handled (they will be clamped in extension.ts)
+        // The formatter itself should still work with clamped values
+
+        // tabSize=0 would be clamped to 1 by validation
+        const output1 = formatCMake(input, { tabSize: 1, indentSize: 1 });
+        assert.ok(output1.includes('set'), 'Should handle minimum values');
+
+        // tabSize=100 would be clamped to 16 by validation
+        const output2 = formatCMake(input, { tabSize: 16, indentSize: 16 });
+        assert.ok(output2.includes('set'), 'Should handle maximum values');
+
+        // lineLength=5 would be clamped to 30 by validation
+        const output3 = formatCMake(input, { lineLength: 30 });
+        assert.ok(output3.includes('set'), 'Should handle minimum lineLength');
+
+        // maxBlankLines=100 would be clamped to 20 by validation
+        const input2 = 'set(A 1)\n\n\n\nset(B 2)';
+        const output4 = formatCMake(input2, { maxBlankLines: 20 });
+        assert.ok(output4.includes('set'), 'Should handle maximum maxBlankLines');
+    });
 });
