@@ -32,7 +32,14 @@ export interface ConfigFileContent {
 }
 
 /**
+ * Maximum number of cached configuration files
+ * This prevents unbounded memory growth in large projects with many config files
+ */
+const MAX_CACHE_SIZE = 50;
+
+/**
  * Cache for loaded configuration files
+ * Using Map to maintain insertion order for LRU eviction
  */
 const configCache = new Map<string, ConfigFileContent>();
 
@@ -45,6 +52,17 @@ const watchedFiles = new Set<string>();
  * File system watchers
  */
 const watchers = new Map<string, fs.FSWatcher>();
+
+/**
+ * Evict oldest entry from cache when size limit is reached
+ */
+function evictOldestCacheEntry(): void {
+    // Get the first (oldest) entry
+    const firstKey = configCache.keys().next().value;
+    if (firstKey) {
+        invalidateConfigCache(firstKey);
+    }
+}
 
 /**
  * Strip comments from JSON content (JSONC to JSON)
@@ -196,14 +214,14 @@ function validateConfigOptions(parsed: Record<string, unknown>): Partial<Formatt
     if (typeof parsed.useTabs === 'boolean') {
         options.useTabs = parsed.useTabs;
     }
-    if (typeof parsed.tabSize === 'number') {
-        options.tabSize = parsed.tabSize;
+    if (typeof parsed.tabSize === 'number' && parsed.tabSize >= 1 && parsed.tabSize <= 16) {
+        options.tabSize = Math.floor(parsed.tabSize);
     }
-    if (typeof parsed.indentSize === 'number') {
-        options.indentSize = parsed.indentSize;
+    if (typeof parsed.indentSize === 'number' && parsed.indentSize >= 1 && parsed.indentSize <= 16) {
+        options.indentSize = Math.floor(parsed.indentSize);
     }
-    if (typeof parsed.continuationIndentSize === 'number') {
-        options.continuationIndentSize = parsed.continuationIndentSize;
+    if (typeof parsed.continuationIndentSize === 'number' && parsed.continuationIndentSize >= 0 && parsed.continuationIndentSize <= 16) {
+        options.continuationIndentSize = Math.floor(parsed.continuationIndentSize);
     }
     if (typeof parsed.keepIndentOnEmptyLines === 'boolean') {
         options.keepIndentOnEmptyLines = parsed.keepIndentOnEmptyLines;
@@ -244,8 +262,8 @@ function validateConfigOptions(parsed: Record<string, unknown>): Partial<Formatt
     }
 
     // Blank Lines
-    if (typeof parsed.maxBlankLines === 'number') {
-        options.maxBlankLines = parsed.maxBlankLines;
+    if (typeof parsed.maxBlankLines === 'number' && parsed.maxBlankLines >= 0 && parsed.maxBlankLines <= 20) {
+        options.maxBlankLines = Math.floor(parsed.maxBlankLines);
     }
 
     // Command Case
@@ -257,8 +275,8 @@ function validateConfigOptions(parsed: Record<string, unknown>): Partial<Formatt
     }
 
     // Wrapping and Alignment
-    if (typeof parsed.lineLength === 'number') {
-        options.lineLength = parsed.lineLength;
+    if (typeof parsed.lineLength === 'number' && parsed.lineLength >= 0 && parsed.lineLength <= 500) {
+        options.lineLength = Math.floor(parsed.lineLength);
     }
     if (typeof parsed.alignMultiLineArguments === 'boolean') {
         options.alignMultiLineArguments = parsed.alignMultiLineArguments;
@@ -309,7 +327,22 @@ export function findConfigFile(documentPath: string, workspaceRoot?: string): st
         for (const configName of CONFIG_FILE_NAMES) {
             const configPath = path.join(currentDir, configName);
             if (fs.existsSync(configPath)) {
-                return configPath;
+                // Resolve symbolic links to prevent issues with links pointing outside workspace
+                try {
+                    const resolvedPath = fs.realpathSync(configPath);
+                    // Verify the resolved path is still within the workspace boundaries
+                    if (workspaceRoot) {
+                        const rootNormalized = path.resolve(root);
+                        if (!resolvedPath.startsWith(rootNormalized + path.sep) && resolvedPath !== rootNormalized) {
+                            // Config file resolves to outside workspace - skip it
+                            continue;
+                        }
+                    }
+                    return resolvedPath;
+                } catch (e) {
+                    // Could not resolve symbolic link - skip this file
+                    continue;
+                }
             }
         }
 
@@ -331,11 +364,18 @@ export function getCachedConfig(configPath: string): ConfigFileContent | null {
     const cached = configCache.get(configPath);
 
     if (cached) {
+        // Move to end (most recently used) for LRU
+        configCache.delete(configPath);
+        configCache.set(configPath, cached);
         return cached;
     }
 
     const config = loadConfigFile(configPath);
     if (config) {
+        // Evict oldest entry if cache is full
+        if (configCache.size >= MAX_CACHE_SIZE) {
+            evictOldestCacheEntry();
+        }
         configCache.set(configPath, config);
         watchConfigFile(configPath);
     }
@@ -353,15 +393,21 @@ function watchConfigFile(filePath: string): void {
 
     try {
         const watcher = fs.watch(filePath, (eventType) => {
-            if (eventType === 'change') {
-                // File was modified - invalidate cache
-                invalidateConfigCache(filePath);
-            } else if (eventType === 'rename') {
-                // File may have been deleted or renamed
-                // Check if file still exists before invalidating
-                if (!fs.existsSync(filePath)) {
+            try {
+                if (eventType === 'change') {
+                    // File was modified - invalidate cache
                     invalidateConfigCache(filePath);
+                } else if (eventType === 'rename') {
+                    // File may have been deleted or renamed
+                    // Check if file still exists before invalidating
+                    if (!fs.existsSync(filePath)) {
+                        invalidateConfigCache(filePath);
+                    }
                 }
+            } catch (err) {
+                // Silently handle errors in watcher callback
+                // Most common errors are ENOENT (file deleted) or permission issues
+                invalidateConfigCache(filePath);
             }
         });
 

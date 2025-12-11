@@ -24,11 +24,11 @@
     // Blank Lines
     "maxBlankLines": 2,
 
-    // Command Case: "unchanged", "lowercase", or "uppercase"
-    "commandCase": "lowercase",
+    // Command Case: "unchanged" (default), "lowercase", or "uppercase"
+    "commandCase": "unchanged",
 
     // Line Wrapping and Alignment
-    "lineLength": 120,
+    "lineLength": 0, // 0 means unlimited (default)
     "alignMultiLineArguments": false,
     "alignMultiLineParentheses": false,
     "alignControlFlowParentheses": false

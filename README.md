@@ -104,10 +104,12 @@ For project-specific settings, create a `.cc-format.jsonc` file in your project 
     // Blank Lines
     "maxBlankLines": 2,
 
-    // Command Case: "unchanged", "lowercase", or "uppercase"
+    // Command Case: "unchanged" (default), "lowercase", or "uppercase"
+    // Note: The default is "unchanged"; this is a custom setting for demonstration
     "commandCase": "lowercase",
 
     // Line Wrapping and Alignment
+    // Note: The default is 0 (unlimited); setting a custom value here
     "lineLength": 120,
     "alignMultiLineArguments": false,
     "alignMultiLineParentheses": false,

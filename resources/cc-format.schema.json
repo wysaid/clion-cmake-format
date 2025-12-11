@@ -101,10 +101,10 @@
     },
     "lineLength": {
       "type": "number",
-      "default": 120,
-      "minimum": 40,
+      "default": 0,
+      "minimum": 0,
       "maximum": 500,
-      "description": "Maximum line length before wrapping"
+      "description": "Maximum line length before wrapping (0 means unlimited)"
     },
     "alignMultiLineArguments": {
       "type": "boolean",

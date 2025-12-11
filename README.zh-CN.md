@@ -104,10 +104,12 @@
     // 空行
     "maxBlankLines": 2,
 
-    // 命令大小写: "unchanged"（不变）、"lowercase"（小写）或 "uppercase"（大写）
+    // 命令大小写: "unchanged"（不变，默认值）、"lowercase"（小写）或 "uppercase"（大写）
+    // 注意: 默认值为 "unchanged"，此处为演示自定义设置
     "commandCase": "lowercase",
 
     // 换行和对齐
+    // 注意: 默认值为 0（不限制），此处设置自定义值
     "lineLength": 120,
     "alignMultiLineArguments": false,
     "alignMultiLineParentheses": false,
