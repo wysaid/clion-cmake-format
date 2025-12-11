@@ -1,0 +1,116 @@
+/**
+ * Test helper functions for loading datasets and managing test data
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Get the absolute path to a dataset file
+ * @param category - The dataset category (basic, parsing, formatting, edge-cases, real-world)
+ * @param subcategory - Optional subcategory (e.g., control-flow, indentation)
+ * @param filename - The filename (with or without .cmake extension)
+ */
+export function getDatasetPath(category: string, subcategory: string | null, filename: string): string {
+    if (!filename.endsWith('.cmake')) {
+        filename = `${filename}.cmake`;
+    }
+
+    if (subcategory) {
+        return path.join(__dirname, 'datasets', category, subcategory, filename);
+    } else {
+        return path.join(__dirname, 'datasets', category, filename);
+    }
+}
+
+/**
+ * Load the content of a dataset file
+ * @param category - The dataset category
+ * @param subcategory - Optional subcategory
+ * @param filename - The filename
+ */
+export function loadDataset(category: string, subcategory: string | null, filename: string): string {
+    const filePath = getDatasetPath(category, subcategory, filename);
+    try {
+        return fs.readFileSync(filePath, 'utf-8');
+    } catch (error) {
+        throw new Error(`Failed to load dataset: ${filePath}\n${error}`);
+    }
+}
+
+/**
+ * Load expected output for a test case
+ * Expected files should have the same name with .expected suffix
+ * @param category - The dataset category
+ * @param subcategory - Optional subcategory
+ * @param filename - The base filename (without .expected)
+ */
+export function loadExpected(category: string, subcategory: string | null, filename: string): string {
+    // Remove .cmake if present, add .expected.cmake
+    const baseName = filename.replace(/\.cmake$/, '');
+    const expectedFilename = `${baseName}.expected.cmake`;
+
+    return loadDataset(category, subcategory, expectedFilename);
+}
+
+/**
+ * Check if an expected output file exists
+ */
+export function hasExpected(category: string, subcategory: string | null, filename: string): boolean {
+    const baseName = filename.replace(/\.cmake$/, '');
+    const expectedFilename = `${baseName}.expected.cmake`;
+    const filePath = getDatasetPath(category, subcategory, expectedFilename);
+
+    return fs.existsSync(filePath);
+}
+
+/**
+ * Convenience function for loading basic datasets (most common case)
+ */
+export function loadBasic(filename: string): string {
+    return loadDataset('basic', null, filename);
+}
+
+/**
+ * Convenience function for loading parsing test data
+ */
+export function loadParsing(subcategory: string, filename: string): string {
+    return loadDataset('parsing', subcategory, filename);
+}
+
+/**
+ * Convenience function for loading formatting test data
+ */
+export function loadFormatting(subcategory: string, filename: string): string {
+    return loadDataset('formatting', subcategory, filename);
+}
+
+/**
+ * Convenience function for loading edge case test data
+ */
+export function loadEdgeCase(filename: string): string {
+    return loadDataset('edge-cases', null, filename);
+}
+
+/**
+ * Convenience function for loading real-world test data
+ */
+export function loadRealWorld(filename: string): string {
+    return loadDataset('real-world', null, filename);
+}
+
+/**
+ * List all dataset files in a category
+ */
+export function listDatasets(category: string, subcategory: string | null = null): string[] {
+    const dirPath = subcategory
+        ? path.join(__dirname, 'datasets', category, subcategory)
+        : path.join(__dirname, 'datasets', category);
+
+    try {
+        const files = fs.readdirSync(dirPath);
+        return files.filter(f => f.endsWith('.cmake') && !f.endsWith('.expected.cmake'));
+    } catch (error) {
+        return [];
+    }
+}
