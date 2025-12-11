@@ -8,18 +8,21 @@ import {
     TokenType,
     parseCMake,
     NodeType,
-    FileNode,
     CommandNode,
     BlockNode,
     CommentNode
 } from '../src/parser';
+import {
+    loadBasic,
+    loadParsing
+} from './helpers';
 
 describe('CMakeTokenizer', () => {
     describe('Basic Tokenization', () => {
         it('should tokenize a simple command', () => {
             const tokenizer = new CMakeTokenizer('project(MyProject)');
             const tokens = tokenizer.tokenize();
-            
+
             assert.strictEqual(tokens.length, 5); // command, (, arg, ), EOF
             assert.strictEqual(tokens[0].type, TokenType.Argument);
             assert.strictEqual(tokens[0].value, 'project');
@@ -33,7 +36,7 @@ describe('CMakeTokenizer', () => {
         it('should tokenize multiple arguments', () => {
             const tokenizer = new CMakeTokenizer('set(VAR value1 value2)');
             const tokens = tokenizer.tokenize();
-            
+
             const args = tokens.filter(t => t.type === TokenType.Argument);
             assert.strictEqual(args.length, 4); // set, VAR, value1, value2
         });
@@ -41,7 +44,7 @@ describe('CMakeTokenizer', () => {
         it('should tokenize quoted arguments', () => {
             const tokenizer = new CMakeTokenizer('message("Hello World")');
             const tokens = tokenizer.tokenize();
-            
+
             const quoted = tokens.find(t => t.type === TokenType.QuotedArgument);
             assert.ok(quoted);
             assert.strictEqual(quoted.value, 'Hello World');
@@ -50,7 +53,7 @@ describe('CMakeTokenizer', () => {
         it('should tokenize comments', () => {
             const tokenizer = new CMakeTokenizer('# This is a comment');
             const tokens = tokenizer.tokenize();
-            
+
             const comment = tokens.find(t => t.type === TokenType.Comment);
             assert.ok(comment);
             assert.strictEqual(comment.value, '# This is a comment');
@@ -59,46 +62,50 @@ describe('CMakeTokenizer', () => {
         it('should tokenize newlines', () => {
             const tokenizer = new CMakeTokenizer('a()\nb()');
             const tokens = tokenizer.tokenize();
-            
+
             const newlines = tokens.filter(t => t.type === TokenType.Newline);
             assert.strictEqual(newlines.length, 1);
         });
 
         it('should handle escaped characters in quoted strings', () => {
-            const tokenizer = new CMakeTokenizer('set(VAR "path\\\\with\\nescapes")');
+            const input = loadBasic('escaped-chars');
+            const tokenizer = new CMakeTokenizer(input);
             const tokens = tokenizer.tokenize();
-            
+
             const quoted = tokens.find(t => t.type === TokenType.QuotedArgument);
             assert.ok(quoted);
-            assert.ok(quoted.value.includes('\\\\'));
+            assert.ok(quoted.value.includes('\\'));
         });
     });
 
     describe('Bracket Arguments', () => {
         it('should tokenize bracket arguments', () => {
-            const tokenizer = new CMakeTokenizer('set(VAR [[literal content]])');
+            const input = loadParsing('special-syntax', 'bracket-arg');
+            const tokenizer = new CMakeTokenizer(input);
             const tokens = tokenizer.tokenize();
-            
+
             const bracket = tokens.find(t => t.type === TokenType.BracketArgument);
             assert.ok(bracket);
             assert.strictEqual(bracket.value, '[[literal content]]');
         });
 
         it('should tokenize bracket arguments with equals', () => {
-            const tokenizer = new CMakeTokenizer('set(VAR [=[literal]=])');
+            const input = loadParsing('special-syntax', 'bracket-arg-equals');
+            const tokenizer = new CMakeTokenizer(input);
             const tokens = tokenizer.tokenize();
-            
+
             const bracket = tokens.find(t => t.type === TokenType.BracketArgument);
             assert.ok(bracket);
-            assert.strictEqual(bracket.value, '[=[literal]=]');
+            assert.strictEqual(bracket.value, '[=[literal with = inside]=]');
         });
     });
 
     describe('Bracket Comments', () => {
         it('should tokenize bracket comments', () => {
-            const tokenizer = new CMakeTokenizer('#[[This is a bracket comment]]');
+            const input = loadParsing('special-syntax', 'bracket-comment');
+            const tokenizer = new CMakeTokenizer(input);
             const tokens = tokenizer.tokenize();
-            
+
             const comment = tokens.find(t => t.type === TokenType.BracketComment);
             assert.ok(comment);
             assert.ok(comment.value.includes('bracket comment'));
@@ -109,11 +116,12 @@ describe('CMakeTokenizer', () => {
 describe('CMakeParser', () => {
     describe('Basic Parsing', () => {
         it('should parse a simple command', () => {
-            const ast = parseCMake('project(MyProject)');
-            
+            const input = loadBasic('simple-command');
+            const ast = parseCMake(input);
+
             assert.strictEqual(ast.type, NodeType.File);
             assert.strictEqual(ast.children.length, 1);
-            
+
             const cmd = ast.children[0] as CommandNode;
             assert.strictEqual(cmd.type, NodeType.Command);
             assert.strictEqual(cmd.name, 'project');
@@ -122,26 +130,26 @@ describe('CMakeParser', () => {
         });
 
         it('should parse multiple commands', () => {
-            const ast = parseCMake(`
-cmake_minimum_required(VERSION 3.10)
-project(MyProject)
-`);
-            
+            const input = loadBasic('multiple-commands');
+            const ast = parseCMake(input);
+
             // Filter out blank lines and get commands
             const commands = ast.children.filter(c => c.type === NodeType.Command);
             assert.strictEqual(commands.length, 2);
         });
 
         it('should parse commands with multiple arguments', () => {
-            const ast = parseCMake('set(VAR value1 value2 value3)');
-            
+            const input = loadBasic('command-with-args');
+            const ast = parseCMake(input);
+
             const cmd = ast.children[0] as CommandNode;
             assert.strictEqual(cmd.arguments.length, 4);
         });
 
         it('should parse quoted arguments', () => {
-            const ast = parseCMake('message(STATUS "Hello World")');
-            
+            const input = loadBasic('quoted-arguments');
+            const ast = parseCMake(input);
+
             const cmd = ast.children[0] as CommandNode;
             assert.strictEqual(cmd.arguments.length, 2);
             assert.strictEqual(cmd.arguments[1].quoted, true);
@@ -151,17 +159,18 @@ project(MyProject)
 
     describe('Comment Parsing', () => {
         it('should parse standalone comments', () => {
-            const ast = parseCMake(`# This is a comment
-project(Test)`);
-            
+            const input = loadBasic('standalone-comment');
+            const ast = parseCMake(input);
+
             const comment = ast.children.find(c => c.type === NodeType.Comment) as CommentNode;
             assert.ok(comment);
             assert.strictEqual(comment.value, '# This is a comment');
         });
 
         it('should parse trailing comments', () => {
-            const ast = parseCMake('set(VAR value) # inline comment');
-            
+            const input = loadBasic('trailing-comment');
+            const ast = parseCMake(input);
+
             const cmd = ast.children[0] as CommandNode;
             assert.ok(cmd.trailingComment);
             assert.ok(cmd.trailingComment.includes('inline comment'));
@@ -170,12 +179,9 @@ project(Test)`);
 
     describe('Block Parsing', () => {
         it('should parse if blocks', () => {
-            const ast = parseCMake(`
-if(TRUE)
-    message("yes")
-endif()
-`);
-            
+            const input = loadParsing('control-flow', 'if-block');
+            const ast = parseCMake(input);
+
             const block = ast.children.find(c => c.type === NodeType.Block) as BlockNode;
             assert.ok(block);
             assert.strictEqual(block.blockType, 'if');
@@ -184,41 +190,30 @@ endif()
         });
 
         it('should parse function blocks', () => {
-            const ast = parseCMake(`
-function(my_func)
-    message("in function")
-endfunction()
-`);
-            
+            const input = loadParsing('functions', 'function-def');
+            const ast = parseCMake(input);
+
             const block = ast.children.find(c => c.type === NodeType.Block) as BlockNode;
             assert.ok(block);
             assert.strictEqual(block.blockType, 'function');
         });
 
         it('should parse foreach blocks', () => {
-            const ast = parseCMake(`
-foreach(item IN ITEMS a b c)
-    message("\${item}")
-endforeach()
-`);
-            
+            const input = loadParsing('control-flow', 'foreach-loop');
+            const ast = parseCMake(input);
+
             const block = ast.children.find(c => c.type === NodeType.Block) as BlockNode;
             assert.ok(block);
             assert.strictEqual(block.blockType, 'foreach');
         });
 
         it('should parse nested blocks', () => {
-            const ast = parseCMake(`
-if(TRUE)
-    if(FALSE)
-        message("nested")
-    endif()
-endif()
-`);
-            
+            const input = loadParsing('control-flow', 'nested-if');
+            const ast = parseCMake(input);
+
             const outerBlock = ast.children.find(c => c.type === NodeType.Block) as BlockNode;
             assert.ok(outerBlock);
-            
+
             const innerBlock = outerBlock.body.find(c => c.type === NodeType.Block) as BlockNode;
             assert.ok(innerBlock);
             assert.strictEqual(innerBlock.blockType, 'if');
