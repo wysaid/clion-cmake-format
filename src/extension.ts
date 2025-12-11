@@ -131,7 +131,14 @@ function getVSCodeOptions(): Partial<FormatterOptions> {
  * Get formatter options for a document, merging VS Code settings with project config
  */
 function getFormatterOptions(document: vscode.TextDocument): Partial<FormatterOptions> {
+    const config = vscode.workspace.getConfiguration('clionCMakeFormatter');
     const vscodeOptions = getVSCodeOptions();
+
+    // Check if project-level configuration is enabled
+    const enableProjectConfig = config.get<boolean>('enableProjectConfig', true);
+    if (!enableProjectConfig) {
+        return vscodeOptions;
+    }
 
     // Get workspace root for the document
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);

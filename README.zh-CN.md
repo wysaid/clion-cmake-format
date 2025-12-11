@@ -170,6 +170,7 @@
 |------|------|--------|------|
 | `clionCMakeFormatter.commandCase` | string | `"unchanged"` | 命令名称大小写转换: `"unchanged"`（不变）、`"lowercase"`（小写） 或 `"uppercase"`（大写） |
 | `clionCMakeFormatter.maxBlankLines` | number | `2` | 保留的最大连续空行数（范围: 0-10） |
+| `clionCMakeFormatter.enableProjectConfig` | boolean | `true` | 启用从 `.cc-format.jsonc` 文件读取项目级配置 |
 
 ### 配置示例
 

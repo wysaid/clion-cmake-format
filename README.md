@@ -170,6 +170,7 @@ Configure via VSCode settings (File → Preferences → Settings or `settings.js
 |---------|------|---------|-------------|
 | `clionCMakeFormatter.commandCase` | string | `"unchanged"` | Command name case transformation: `"unchanged"`, `"lowercase"`, or `"uppercase"` |
 | `clionCMakeFormatter.maxBlankLines` | number | `2` | Maximum number of consecutive blank lines to preserve (range: 0-10) |
+| `clionCMakeFormatter.enableProjectConfig` | boolean | `true` | Enable reading project-level configuration from `.cc-format.jsonc` files |
 
 ### Configuration Example
 

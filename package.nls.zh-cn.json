@@ -26,5 +26,6 @@
     "config.alignMultiLineArguments.description": "多行时对齐参数",
     "config.alignMultiLineParentheses.description": "多行时对齐圆括号",
     "config.alignControlFlowParentheses.description": "多行时对齐控制流圆括号",
+    "config.enableProjectConfig.description": "启用从 .cc-format.jsonc 文件读取项目级配置。禁用时，仅使用 VS Code 设置。",
     "command.formatDocument": "CLion CMake 格式化工具: 格式化文档"
 }

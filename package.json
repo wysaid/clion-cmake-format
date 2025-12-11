@@ -198,6 +198,12 @@
                     "default": false,
                     "description": "%config.alignControlFlowParentheses.description%",
                     "order": 43
+                },
+                "clionCMakeFormatter.enableProjectConfig": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%config.enableProjectConfig.description%",
+                    "order": 50
                 }
             }
         }
