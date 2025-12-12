@@ -2,9 +2,10 @@
     "name": "clion-cmake-format",
     "displayName": "%displayName%",
     "description": "%description%",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "wysaid",
     "license": "MIT",
+    "icon": "logo.png",
     "engines": {
         "vscode": "^1.50.0"
     },
