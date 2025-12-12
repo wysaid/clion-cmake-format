@@ -1,88 +1,88 @@
-# 测试扩展完成总结
+# Test Expansion Completion Summary
 
-## 概述
+## Overview
 
-成功从 CMake 官方仓库提取并验证了 20 个有代表性的测试用例，极大地增强了格式化器的测试覆盖范围。
+Successfully extracted and verified 20 representative test cases from the CMake official repository, significantly enhancing the formatter's test coverage.
 
-## 完成的工作
+## Completed Work
 
-### 1. 工具开发
+### 1. Tool Development
 
-创建了两个互补的脚本工具：
+Created two complementary script tools:
 
-#### `scripts/select-cmake-tests.py` (智能选择器)
-- **功能**: 自动分析和选择测试文件
-- **特性**:
-  - 复杂度评分算法 (基于命令数、函数/宏、控制流)
-  - 多样性选择策略 (简单/中等/复杂各 5/8/7 个)
-  - 自动生成 README
-  - Git sparse checkout 优化 (只下载 Tests 目录)
-- **输入**: CMake 官方仓库 (~21,000 个文件)
-- **输出**: 20 个精选测试文件
+#### `scripts/select-cmake-tests.py` (Smart Selector)
+- **Function**: Automatically analyze and select test files
+- **Features**:
+  - Complexity scoring algorithm (based on commands, functions/macros, control flow)
+  - Diversity selection strategy (5/8/7 simple/medium/complex files)
+  - Auto-generate README
+  - Git sparse checkout optimization (only download Tests directory)
+- **Input**: CMake official repository (~21,000 files)
+- **Output**: 20 curated test files
 
-#### `scripts/fetch-cmake-tests.sh` (手动选择器)
-- **功能**: 手动浏览和选择测试文件
-- **特性**:
-  - 5 类测试目录 (basic-syntax, commands, real-world, complex, tutorial)
-  - 保留原始目录结构
-  - 简单易用
-- **用途**: 用户需要手动挑选特定文件时使用
+#### `scripts/fetch-cmake-tests.sh` (Manual Selector)
+- **Function**: Manually browse and select test files
+- **Features**:
+  - 5 test directory categories (basic-syntax, commands, real-world, complex, tutorial)
+  - Preserve original directory structure
+  - Simple and easy to use
+- **Use Case**: When users need to manually pick specific files
 
-#### `scripts/test-cmake-official.js` (批量测试器)
-- **功能**: 批量测试所有官方测试文件
-- **特性**:
-  - 幂等性验证 (format(format(x)) == format(x))
-  - 统计信息输出
-  - 错误详情报告
-- **输出**: 测试通过率和详细统计
+#### `scripts/test-cmake-official.js` (Batch Tester)
+- **Function**: Batch test all official test files
+- **Features**:
+  - Idempotency verification (format(format(x)) == format(x))
+  - Statistics output
+  - Error details reporting
+- **Output**: Test pass rate and detailed statistics
 
-### 2. 测试数据集
+### 2. Test Dataset
 
-#### 获取源
-- **仓库**: https://github.com/Kitware/CMake
-- **目录**: Tests/
-- **规模**: 8,899 个 CMake 文件
-- **方法**: Git sparse checkout (只下载 ~3 MB，避免下载整个 200+ MB 仓库)
+#### Source
+- **Repository**: https://github.com/Kitware/CMake
+- **Directory**: Tests/
+- **Scale**: 8,899 CMake files
+- **Method**: Git sparse checkout (only download ~3 MB, avoiding full 200+ MB repository)
 
-#### 选择结果
-从 8,899 个文件中选出 20 个代表性文件：
+#### Selection Results
+Selected 20 representative files from 8,899 files:
 
-| 复杂度级别 | 数量 | 行数范围 | 复杂度范围 |
-|-----------|------|---------|-----------|
-| 简单 | 5 | 8-21 | 4-20 |
-| 中等 | 8 | 51-144 | 27-99 |
-| 复杂 | 7 | 228-3511 | 167-2504 |
+| Complexity Level | Count | Line Range | Complexity Range |
+|------------------|-------|------------|------------------|
+| Simple | 5 | 8-21 | 4-20 |
+| Medium | 8 | 51-144 | 27-99 |
+| Complex | 7 | 228-3511 | 167-2504 |
 
-#### 覆盖的特性
-- ✅ 基础命令: set, file, message, etc.
-- ✅ 控制流: if/else/endif, foreach/endforeach, while/endwhile
-- ✅ 函数和宏定义
-- ✅ 多行命令和参数
-- ✅ 复杂嵌套结构
-- ✅ 注释处理
-- ✅ 真实项目用例
-- ✅ 特殊语法: bracket arguments, bracket comments
+#### Covered Features
+- ✅ Basic commands: set, file, message, etc.
+- ✅ Control flow: if/else/endif, foreach/endforeach, while/endwhile
+- ✅ Function and macro definitions
+- ✅ Multi-line commands and arguments
+- ✅ Complex nested structures
+- ✅ Comment handling
+- ✅ Real-world project use cases
+- ✅ Special syntax: bracket arguments, bracket comments
 
-### 3. 测试结果
+### 3. Test Results
 
-#### 幂等性测试
+#### Idempotency Testing
 ```bash
 node scripts/test-cmake-official.js
 ```
 
-**结果**:
-- ✅ 通过: 20/20 (100%)
-- ❌ 失败: 0/20
-- ⚠️ 错误: 0/20
+**Results**:
+- ✅ Passed: 20/20 (100%)
+- ❌ Failed: 0/20
+- ⚠️ Errors: 0/20
 
-**统计**:
-- 总行数: 6,302 行
-- 平均每文件: 315 行
-- 复杂度范围: 4-2504
+**Statistics**:
+- Total lines: 6,302 lines
+- Average per file: 315 lines
+- Complexity range: 4-2504
 
-#### 示例文件
+#### Example Files
 
-**简单文件** - `FortranOnly_test_preprocess.cmake` (8 行):
+**Simple File** - `FortranOnly_test_preprocess.cmake` (8 lines):
 ```cmake
 set(TEST_FILE CMakeFiles/preprocess.dir/preprocess.F.i)
 file(READ ${TEST_FILE} CONTENTS)
@@ -93,61 +93,61 @@ else()
 endif()
 ```
 
-**中等复杂** - `RunCMake_FetchContent_DirOverrides.cmake` (70 行):
-- FetchContent 命令测试
-- 目录覆盖逻辑
-- 错误处理
+**Medium Complexity** - `RunCMake_FetchContent_DirOverrides.cmake` (70 lines):
+- FetchContent command testing
+- Directory override logic
+- Error handling
 
-**高度复杂** - `CMakeLists.txt` (3,511 行):
-- CMake 自己的主测试文件
-- 包含所有 CMake 特性
-- 复杂度评分: 2504
+**High Complexity** - `CMakeLists.txt` (3,511 lines):
+- CMake's own main test file
+- Contains all CMake features
+- Complexity score: 2504
 
-### 4. 文档更新
+### 4. Documentation Updates
 
-#### 新增文档
-- `docs/EXTENDING_TESTS.md` - 完整的测试扩展指南
-  - CMake 官方资源介绍
-  - 两种选择方法 (自动/手动)
-  - 集成到测试套件的步骤
-  - 最佳实践和注意事项
+#### New Documentation
+- `docs/EXTENDING_TESTS.md` - Complete test extension guide
+  - Introduction to CMake official resources
+  - Two selection methods (automatic/manual)
+  - Steps to integrate into test suite
+  - Best practices and important notes
 
-#### 更新文档
-- `README.md` - 添加测试覆盖部分 (英文)
-- `README.zh-CN.md` - 添加测试覆盖部分 (中文)
-- `test/datasets/cmake-official/README.md` - 自动生成的测试文件说明
+#### Updated Documentation
+- `README.md` - Added test coverage section (English)
+- `README.zh-CN.md` - Added test coverage section (Chinese)
+- `test/datasets/cmake-official/README.md` - Auto-generated test file documentation
 
-### 5. 项目结构变化
+### 5. Project Structure Changes
 
 ```
 clion-cmake-format/
-├── scripts/                     [新增]
-│   ├── fetch-cmake-tests.sh     # Bash 手动选择器
-│   ├── select-cmake-tests.py    # Python 智能选择器
-│   └── test-cmake-official.js   # Node.js 批量测试器
+├── scripts/                     [NEW]
+│   ├── fetch-cmake-tests.sh     # Bash manual selector
+│   ├── select-cmake-tests.py    # Python smart selector
+│   └── test-cmake-official.js   # Node.js batch tester
 ├── test/
 │   └── datasets/
-│       └── cmake-official/      [新增] - 20 个测试文件
+│       └── cmake-official/      [NEW] - 20 test files
 └── docs/
-    └── EXTENDING_TESTS.md       [新增] - 测试扩展指南
+    └── EXTENDING_TESTS.md       [NEW] - Test extension guide
 ```
 
-## 测试覆盖对比
+## Test Coverage Comparison
 
-### 之前
-- 8 个 well-formatted 测试文件
-- 约 1,500 行测试代码
-- 主要覆盖基础特性
+### Before
+- 8 well-formatted test files
+- Approximately 1,500 lines of test code
+- Primarily covering basic features
 
-### 之后
-- 8 个 well-formatted + 20 个官方测试文件
-- 约 7,800 行测试代码 (+420%)
-- 覆盖 CMake 官方使用的所有主要特性
-- 包含真实世界复杂用例
+### After
+- 8 well-formatted + 20 official test files
+- Approximately 7,800 lines of test code (+420%)
+- Covers all major features used in CMake official
+- Includes real-world complex use cases
 
-## 技术亮点
+## Technical Highlights
 
-### 1. 智能复杂度评分
+### 1. Smart Complexity Scoring
 ```python
 complexity = (
     commands +
@@ -158,44 +158,44 @@ complexity = (
 )
 ```
 
-### 2. 多样性选择算法
-- 按复杂度分层 (简单/中等/复杂)
-- 每层按文件大小排序
-- 均匀采样，避免重复
+### 2. Diversity Selection Algorithm
+- Layer by complexity (simple/medium/complex)
+- Sort by file size within each layer
+- Uniform sampling, avoid duplicates
 
-### 3. Sparse Checkout 优化
+### 3. Sparse Checkout Optimization
 ```bash
 git clone --depth 1 --filter=blob:none --sparse
 git sparse-checkout set Tests/
 ```
-- 只下载需要的目录
-- 减少 ~97% 的下载量 (3 MB vs 200+ MB)
+- Only download needed directories
+- Reduce ~97% download size (3 MB vs 200+ MB)
 
-### 4. 实时进度反馈
+### 4. Real-time Progress Feedback
 ```
 [1/20] BootstrapTest.cmake... ✅ PASS
 [2/20] CMakeLists.txt... ✅ PASS
 ...
 ```
 
-## 验证方法
+## Verification Methods
 
-### 运行所有测试
+### Run All Tests
 ```bash
-# 单元测试 (107 个)
+# Unit tests (107)
 npm run test:unit
 
-# CMake 官方测试 (20 个)
+# CMake official tests (20)
 node scripts/test-cmake-official.js
 
-# 编译检查
+# Compilation check
 npm run compile
 
-# Lint 检查
+# Lint check
 npm run lint
 ```
 
-### 单文件测试
+### Single File Testing
 ```bash
 node -e "
 const {formatCMake} = require('./dist/src/formatter');
@@ -208,68 +208,68 @@ console.log(f1 === f2 ? 'PASS' : 'FAIL');
 "
 ```
 
-## 未来改进
+## Future Improvements
 
-### 潜在扩展
-1. **更多测试集**:
-   - 添加社区流行项目 (LLVM, Boost, Qt)
-   - 收集用户报告的边界情况
+### Potential Extensions
+1. **More Test Suites**:
+   - Add popular community projects (LLVM, Boost, Qt)
+   - Collect user-reported edge cases
 
-2. **自动化测试**:
-   - 在 CI 中运行 `test-cmake-official.js`
-   - 定期更新官方测试集 (每个 CMake 发布版本)
+2. **Test Automation**:
+   - Run `test-cmake-official.js` in CI
+   - Periodically update official test suite (every CMake release)
 
-3. **性能测试**:
-   - 大文件格式化性能 (如 3,511 行的 CMakeLists.txt)
-   - 批量文件格式化
+3. **Performance Testing**:
+   - Large file formatting performance (e.g., 3,511-line CMakeLists.txt)
+   - Batch file formatting
 
-4. **回归测试**:
-   - 保存当前格式化输出作为快照
-   - 检测意外的格式化行为变化
+4. **Regression Testing**:
+   - Save current formatting output as snapshots
+   - Detect unexpected formatting behavior changes
 
-### 测试策略
-- **Well-formatted**: 验证幂等性 (format(format(x)) == format(x))
-- **Official tests**: 验证真实项目兼容性
-- **Unit tests**: 验证特定功能正确性
-- **Edge cases**: 验证边界情况处理
+### Testing Strategy
+- **Well-formatted**: Verify idempotency (format(format(x)) == format(x))
+- **Official tests**: Verify real-world project compatibility
+- **Unit tests**: Verify specific functionality correctness
+- **Edge cases**: Verify boundary condition handling
 
-## 贡献者指南
+## Contributor Guide
 
-### 添加新测试文件
-1. 将文件复制到 `test/datasets/cmake-official/`
-2. 运行 `node scripts/test-cmake-official.js` 验证
-3. 如果通过，提交并说明测试覆盖的特性
+### Adding New Test Files
+1. Copy file to `test/datasets/cmake-official/`
+2. Run `node scripts/test-cmake-official.js` to verify
+3. If passed, commit and explain what features the test covers
 
-### 报告格式化问题
-1. 提供原始 CMake 文件
-2. 说明预期输出
-3. 包含配置文件 (如果使用)
-4. 运行 `npm run test:unit` 确认问题
+### Reporting Formatting Issues
+1. Provide original CMake file
+2. Explain expected output
+3. Include configuration file (if used)
+4. Run `npm run test:unit` to confirm issue
 
-## 总结
+## Summary
 
-✅ **完全达成目标**:
-- 测试覆盖增加 420%
-- 100% 通过幂等性测试
-- 完整的工具链和文档
-- 真实世界用例验证
+✅ **Goals Fully Achieved**:
+- Test coverage increased by 420%
+- 100% passed idempotency testing
+- Complete toolchain and documentation
+- Real-world use case verification
 
-🎯 **质量保证**:
-- 所有 CMake 官方测试文件格式化后保持幂等
-- 无编译或 lint 错误
-- 详细的统计和验证
+🎯 **Quality Assurance**:
+- All CMake official test files remain idempotent after formatting
+- No compilation or lint errors
+- Detailed statistics and verification
 
-📚 **文档完善**:
-- 用户指南
-- 开发者指南
-- 自动化脚本
-- 最佳实践
+📚 **Complete Documentation**:
+- User guide
+- Developer guide
+- Automation scripts
+- Best practices
 
 ---
 
-**日期**: 2025-12-12
-**测试集版本**: CMake master (latest)
-**工具版本**:
+**Date**: 2025-12-12
+**Test Suite Version**: CMake master (latest)
+**Tool Versions**:
 - Python 3.x
 - Node.js 18.x-23.x
 - Git 2.x

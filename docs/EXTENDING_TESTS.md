@@ -1,67 +1,67 @@
-# 扩展测试集指南
+# Test Suite Extension Guide
 
-## 背景
+## Background
 
-当前 `test/datasets/well-formatted/default/` 包含 8 个测试用例。为了更全面地验证格式化器的幂等性和正确性，可以从 CMake 官方测试集中选取更多有代表性的测试用例。
+Currently, `test/datasets/well-formatted/default/` contains 8 test cases. To more comprehensively verify the formatter's idempotency and correctness, we can select more representative test cases from the CMake official test suite.
 
-## CMake 官方测试资源
+## CMake Official Test Resources
 
-### 官方仓库
-- **主仓库**: https://github.com/Kitware/CMake
-- **测试目录**: https://github.com/Kitware/CMake/tree/master/Tests
-- **许可证**: BSD 3-Clause (与本项目兼容)
+### Official Repository
+- **Main Repository**: https://github.com/Kitware/CMake
+- **Test Directory**: https://github.com/Kitware/CMake/tree/master/Tests
+- **License**: BSD 3-Clause (compatible with this project)
 
-### 推荐的测试类别
+### Recommended Test Categories
 
-| 类别 | 路径 | 说明 | 适合度 |
-|------|------|------|--------|
-| 基础语法 | `Tests/CMakeOnly/` | 纯 CMake 语法，不涉及编译 | ⭐⭐⭐⭐⭐ |
-| 命令测试 | `Tests/RunCMake/` | 各种 CMake 命令的测试 | ⭐⭐⭐⭐⭐ |
-| 复杂项目 | `Tests/Complex/` | 复杂项目示例 | ⭐⭐⭐⭐ |
-| 教程示例 | `Tests/Tutorial/` | 官方教程代码 | ⭐⭐⭐ |
-| 真实案例 | `Tests/CMakeLists.txt` | CMake 自己的构建文件 | ⭐⭐⭐⭐ |
+| Category | Path | Description | Suitability |
+|----------|------|-------------|-------------|
+| Basic Syntax | `Tests/CMakeOnly/` | Pure CMake syntax, no compilation | ⭐⭐⭐⭐⭐ |
+| Command Tests | `Tests/RunCMake/` | Tests for various CMake commands | ⭐⭐⭐⭐⭐ |
+| Complex Projects | `Tests/Complex/` | Complex project examples | ⭐⭐⭐⭐ |
+| Tutorial Examples | `Tests/Tutorial/` | Official tutorial code | ⭐⭐⭐ |
+| Real-world Cases | `Tests/CMakeLists.txt` | CMake's own build files | ⭐⭐⭐⭐ |
 
-## 使用工具
+## Tools
 
-### 方法 1: 自动选择脚本 (推荐)
+### Method 1: Automatic Selection Script (Recommended)
 
 ```bash
-# 运行 Python 脚本自动分析和选择测试文件
+# Run Python script to automatically analyze and select test files
 python3 scripts/select-cmake-tests.py
 ```
 
-**脚本功能**:
-- 自动克隆 CMake 官方仓库 (sparse checkout，只下载 Tests 目录)
-- 分析所有 CMake 测试文件的复杂度和特性
-- 根据多样性原则选择 20 个代表性文件
-- 将选中的文件复制到 `test/datasets/cmake-official/`
-- 生成包含选择标准的 README
+**Script Features**:
+- Automatically clones CMake official repository (sparse checkout, only downloads Tests directory)
+- Analyzes complexity and characteristics of all CMake test files
+- Selects 20 representative files based on diversity principles
+- Copies selected files to `test/datasets/cmake-official/`
+- Generates README with selection criteria
 
-**选择标准**:
-- **简单** (5个): ≤50 行，复杂度 ≤20
-- **中等** (8个): 50-200 行，复杂度 20-100
-- **复杂** (7个): ≥200 行，复杂度 ≥100
+**Selection Criteria**:
+- **Simple** (5): ≤50 lines, complexity ≤20
+- **Medium** (8): 50-200 lines, complexity 20-100
+- **Complex** (7): ≥200 lines, complexity ≥100
 
-### 方法 2: 手动选择
+### Method 2: Manual Selection
 
 ```bash
-# 1. 克隆 CMake 仓库 (sparse checkout)
+# 1. Clone CMake repository (sparse checkout)
 git clone --depth 1 --filter=blob:none --sparse https://github.com/Kitware/CMake.git /tmp/cmake-tests
 cd /tmp/cmake-tests
 git sparse-checkout set Tests
 
-# 2. 浏览并选择感兴趣的测试文件
+# 2. Browse and select test files of interest
 ls -R Tests/
 
-# 3. 复制到测试集
+# 3. Copy to test suite
 cp Tests/CMakeOnly/SomeTest/CMakeLists.txt test/datasets/cmake-official/
 ```
 
-## 集成到测试套件
+## Integration into Test Suite
 
-### 选项 A: 单独的测试类别
+### Option A: Separate Test Category
 
-在 `test/well-formated.test.ts` 中添加新的测试类别:
+Add a new test category in `test/well-formated.test.ts`:
 
 ```typescript
 describe('CMake Official Tests', () => {
@@ -79,32 +79,32 @@ describe('CMake Official Tests', () => {
 });
 ```
 
-### 选项 B: 添加到现有风格
+### Option B: Add to Existing Style
 
 ```bash
-# 复制选中的文件到 well-formatted/default/
+# Copy selected files to well-formatted/default/
 cp test/datasets/cmake-official/interesting-file.cmake \
    test/datasets/well-formatted/default/
 ```
 
-## 建议的工作流程
+## Recommended Workflow
 
-### 第一阶段: 评估和筛选
+### Phase 1: Evaluation and Filtering
 
-1. **运行自动选择脚本**
+1. **Run Automatic Selection Script**
    ```bash
    python3 scripts/select-cmake-tests.py
    ```
 
-2. **审查选中的文件**
+2. **Review Selected Files**
    ```bash
    cd test/datasets/cmake-official
    ls -lh
    ```
 
-3. **手动测试部分文件**
+3. **Manually Test Some Files**
    ```bash
-   # 测试单个文件的格式化
+   # Test formatting of a single file
    npm run compile
    node -e "
    const {formatCMake} = require('./dist/src/formatter');
@@ -115,55 +115,55 @@ cp test/datasets/cmake-official/interesting-file.cmake \
    "
    ```
 
-### 第二阶段: 集成测试
+### Phase 2: Integration Testing
 
-1. **创建新的测试类别**
+1. **Create New Test Category**
    ```bash
-   # 编辑 test/well-formated.test.ts
-   # 添加 CMake Official Tests 部分
+   # Edit test/well-formated.test.ts
+   # Add CMake Official Tests section
    ```
 
-2. **运行测试**
+2. **Run Tests**
    ```bash
    npm run test:unit
    ```
 
-3. **分析失败的测试**
-   - 记录格式化器的问题
-   - 确定是否需要修复或排除特定文件
+3. **Analyze Failed Tests**
+   - Record formatter issues
+   - Determine if specific files need fixing or exclusion
 
-### 第三阶段: 优化
+### Phase 3: Optimization
 
-1. **排除不适合的文件**
-   - 包含特殊语法的文件
-   - 测试错误情况的文件
-   - 过于复杂或特殊的文件
+1. **Exclude Unsuitable Files**
+   - Files containing special syntax
+   - Files testing error conditions
+   - Files that are too complex or special-purpose
 
-2. **选择最有代表性的文件**
-   - 覆盖常见的 CMake 模式
-   - 包含多种复杂度级别
-   - 真实项目的典型用法
+2. **Select Most Representative Files**
+   - Cover common CMake patterns
+   - Include various complexity levels
+   - Typical usage from real projects
 
-3. **记录测试覆盖范围**
-   - 更新 README
-   - 记录每个文件测试的特性
+3. **Document Test Coverage**
+   - Update README
+   - Document features tested by each file
 
-## 预期成果
+## Expected Outcomes
 
-- **当前**: 8 个 well-formatted 测试用例 + 20 个 CMake 官方测试用例
-- **覆盖范围**:
-  - ✅ 基础命令 (add_executable, set, etc.)
-  - ✅ 控制流 (if, foreach, while)
-  - ✅ 函数和宏
-  - ✅ 多行命令
-  - ✅ 注释处理
-  - ✅ 复杂嵌套
-  - ✅ 真实项目结构
-  - ✅ CMake 官方测试用例 (从 8899 个文件中选出 20 个代表性文件)
+- **Current**: 8 well-formatted test cases + 20 CMake official test cases
+- **Coverage**:
+  - ✅ Basic commands (add_executable, set, etc.)
+  - ✅ Control flow (if, foreach, while)
+  - ✅ Functions and macros
+  - ✅ Multi-line commands
+  - ✅ Comment handling
+  - ✅ Complex nesting
+  - ✅ Real project structures
+  - ✅ CMake official test cases (20 representative files selected from 8,899 files)
 
-## 测试结果
+## Test Results
 
-运行 `node scripts/test-cmake-official.js` 验证 CMake 官方测试文件：
+Run `node scripts/test-cmake-official.js` to verify CMake official test files:
 
 ```
 ✅ Passed: 20/20
@@ -176,30 +176,30 @@ cp test/datasets/cmake-official/interesting-file.cmake \
   - Complexity range: 4-2504
 ```
 
-所有官方测试文件都通过了幂等性测试！ ✨
+All official test files passed the idempotency test! ✨
 
-## 注意事项
+## Important Notes
 
-### ⚠️ 重要原则
+### ⚠️ Key Principles
 
-1. **不修改测试数据**: 测试文件应保持原样，即使看起来"不标准"
-2. **关注幂等性**: 主要目标是验证 `format(format(x)) == format(x)`
-3. **记录问题**: 如果某些文件无法正确格式化，记录问题而不是修改测试数据
+1. **Don't Modify Test Data**: Test files should remain as-is, even if they appear "non-standard"
+2. **Focus on Idempotency**: The main goal is to verify `format(format(x)) == format(x)`
+3. **Document Issues**: If certain files cannot be formatted correctly, document the issue rather than modifying the test data
 
-### 🔍 排除标准
+### 🔍 Exclusion Criteria
 
-以下类型的文件不适合作为格式化测试:
-- 故意包含语法错误的测试
-- 测试特定 CMake 版本功能的文件
-- 包含平台特定语法的文件
-- 测试错误处理的文件
+The following types of files are not suitable as formatting tests:
+- Tests intentionally containing syntax errors
+- Files testing specific CMake version features
+- Files containing platform-specific syntax
+- Files testing error handling
 
-## 参考资源
+## Reference Resources
 
-- CMake 官方文档: https://cmake.org/documentation/
-- CMake 测试指南: https://github.com/Kitware/CMake/blob/master/Help/dev/testing.rst
-- CMake 语法规范: https://cmake.org/cmake/help/latest/manual/cmake-language.7.html
+- CMake Official Documentation: https://cmake.org/documentation/
+- CMake Testing Guide: https://github.com/Kitware/CMake/blob/master/Help/dev/testing.rst
+- CMake Syntax Specification: https://cmake.org/cmake/help/latest/manual/cmake-language.7.html
 
-## 更新历史
+## Update History
 
-- 2025-12-12: 创建本指南，提供自动选择脚本
+- 2025-12-12: Created this guide, provided automatic selection script
