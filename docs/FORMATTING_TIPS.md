@@ -11,7 +11,7 @@ This extension now provides visual feedback when formatting CMake files, similar
 When you format a file that is already well-formatted, you will see a status bar message:
 
 ```text
-No changes: content is already well-formatted - Reformat Code (Ctrl+Shift+I)
+No changes: content is already well-formatted
 ```
 
 This helps you quickly understand that the file doesn't need any formatting changes.
@@ -21,19 +21,10 @@ This helps you quickly understand that the file doesn't need any formatting chan
 When formatting makes changes to the file, you will see how many lines were affected:
 
 ```text
-Formatted 9 lines - Reformat Code (Ctrl+Shift+I)
+Formatted 9 lines
 ```
 
 This gives you immediate feedback about the impact of the formatting operation.
-
-### 3. Keybinding Display
-
-The notification includes the current keybinding for the format command (if available), making it easier to remember the shortcut for future use.
-
-**Note:** The keybinding shown depends on your VS Code configuration and may vary based on:
-- Your operating system (Windows, Mac, Linux)
-- Custom keybinding configurations
-- Keyboard layout
 
 ## Implementation Details
 
@@ -47,8 +38,8 @@ The extension compares the original text with the formatted text line by line:
 ### Status Bar Display
 
 - Messages are displayed in the status bar for 3 seconds
-- The keybinding is retrieved dynamically from VS Code's keybinding configuration
-- If no keybinding is set, only the message without keybinding information is shown
+- If formatting made no changes, a "No changes" message is shown
+- If formatting changed the file, the number of changed lines is displayed
 
 ## Usage
 
@@ -68,7 +59,6 @@ This feature is inspired by CLion's formatting feedback:
 |---------|-------|----------------|
 | No changes message | ✅ | ✅ |
 | Changed lines count | ✅ | ✅ |
-| Keybinding display | ✅ | ✅ |
 | Display location | Popup notification | Status bar message |
 | Display duration | Persistent until dismissed | 3 seconds |
 
