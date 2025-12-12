@@ -1,5 +1,5 @@
 /**
- * Unit tests for well-formatted CMake files (well-formated directory)
+ * Unit tests for well-formatted CMake files (well-formatted directory)
  *
  * These tests verify that files which are already well-formatted
  * remain unchanged after formatting with their respective style configuration.

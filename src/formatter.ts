@@ -169,6 +169,7 @@ export class CMakeFormatter {
         let consecutiveBlankLines = 0;
         let trailingBlankLines = 0;
         let hasContent = false;
+        const maxBlankLines = Math.max(0, this.options.maxBlankLines);
 
         for (let i = 0; i < node.children.length; i++) {
             const child = node.children[i];
@@ -178,7 +179,8 @@ export class CMakeFormatter {
                 const isLastChild = i === node.children.length - 1;
 
                 // Add up to maxBlankLines from the count in this node
-                const linesToAdd = Math.min(blankNode.count, this.options.maxBlankLines - consecutiveBlankLines);
+                const remaining = Math.max(0, maxBlankLines - consecutiveBlankLines);
+                const linesToAdd = Math.min(blankNode.count, remaining);
 
                 if (isLastChild) {
                     // Track trailing blank lines separately - don't add to lines array
@@ -384,6 +386,7 @@ export class CMakeFormatter {
     ): string {
         const lines: string[] = [];
         const continuationIndent = indent + this.getContinuationIndent();
+        const maxBlankLines = Math.max(0, this.options.maxBlankLines);
 
         if (args.length === 0) {
             lines.push(`${indent}${name}${spaceBeforeParen}(`);
@@ -425,7 +428,7 @@ export class CMakeFormatter {
             // Add blank lines before this group if needed (from first arg in group)
             const firstArgInGroup = group[0];
             if (firstArgInGroup.blankLinesBefore && firstArgInGroup.blankLinesBefore > 0) {
-                const blankLinesToAdd = Math.min(firstArgInGroup.blankLinesBefore, this.options.maxBlankLines);
+                const blankLinesToAdd = Math.min(firstArgInGroup.blankLinesBefore, maxBlankLines);
                 for (let i = 0; i < blankLinesToAdd; i++) {
                     lines.push('');
                 }
@@ -472,7 +475,7 @@ export class CMakeFormatter {
                     lines.push(line);
                     // Add blank lines before the comment if needed
                     if (lastArgInGroup.blankLinesBefore && lastArgInGroup.blankLinesBefore > 0) {
-                        const blankLinesToAdd = Math.min(lastArgInGroup.blankLinesBefore, this.options.maxBlankLines);
+                        const blankLinesToAdd = Math.min(lastArgInGroup.blankLinesBefore, maxBlankLines);
                         for (let i = 0; i < blankLinesToAdd; i++) {
                             lines.push('');
                         }
@@ -484,7 +487,7 @@ export class CMakeFormatter {
 
             // Add closing paren if this is the last group and it should be on same line
             if (isLastGroup && hasClosingParenOnSameLine) {
-                line += ')';
+                line = line ? (line + ')') : `${indent})`;
             }
 
             if (line) { // Only push if line is not empty
@@ -519,6 +522,7 @@ export class CMakeFormatter {
     ): string {
         const lines: string[] = [];
         const continuationIndent = indent + this.getContinuationIndent();
+        const maxBlankLines = Math.max(0, this.options.maxBlankLines);
 
         // Start with command name and opening paren, first arg on same line if fits
         const commandStart = `${indent}${name}${spaceBeforeParen}(${innerPadding}`;
@@ -538,7 +542,7 @@ export class CMakeFormatter {
                     lines.push(currentLine);
                     currentLine = continuationIndent;
                 }
-                const blankLinesToAdd = Math.min(arg.blankLinesBefore, this.options.maxBlankLines);
+                const blankLinesToAdd = Math.min(arg.blankLinesBefore, maxBlankLines);
                 for (let j = 0; j < blankLinesToAdd; j++) {
                     lines.push('');
                 }

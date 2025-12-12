@@ -495,7 +495,8 @@ export class CMakeParser {
 
         // Handle newlines (blank lines)
         if (token.type === TokenType.Newline) {
-            const startLine = token.line;
+            // First newline ends token.line; the first blank line is token.line + 1
+            const startLine = token.line + 1;
             this.advance();
 
             // Check if it's a blank line (consecutive newlines)
@@ -508,7 +509,7 @@ export class CMakeParser {
                 return {
                     type: NodeType.BlankLine,
                     startLine,
-                    endLine: startLine,
+                    endLine: startLine + Math.max(0, count - 1),
                     count
                 } as BlankLineNode;
             }
@@ -566,7 +567,7 @@ export class CMakeParser {
 
         // Expect right paren
         let endLine = startLine;
-        let rightParenLine = startLine;
+        let rightParenLine: number | undefined;
         if (!this.isAtEnd() && this.peek().type === TokenType.RightParen) {
             endLine = this.peek().line;
             rightParenLine = this.peek().line;
@@ -587,7 +588,10 @@ export class CMakeParser {
         const hasFirstArgOnSameLine = args.length > 0 && args[0].line === leftParenLine;
 
         // Determine if closing paren is on same line as last arg
-        const hasClosingParenOnSameLine = args.length > 0 && args[args.length - 1].line === rightParenLine;
+        const hasClosingParenOnSameLine =
+            rightParenLine !== undefined &&
+            args.length > 0 &&
+            args[args.length - 1].line === rightParenLine;
 
         const command: CommandNode = {
             type: NodeType.Command,
