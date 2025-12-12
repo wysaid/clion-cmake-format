@@ -20,8 +20,8 @@ const WELL_FORMATTED_DIR = path.join(DATASETS_DIR, 'well-formatted');
 // Categories to process (excluding well-formatted itself)
 const INPUT_CATEGORIES = ['basic', 'cmake-official', 'edge-cases', 'formatting', 'parsing', 'real-world'];
 
-// Styles to generate (excluding default which should already exist)
-const STYLES_TO_GENERATE = ['lowercase', 'uppercase', 'compact', 'jetbrains'];
+// Styles to generate (including default for consistency)
+const STYLES_TO_GENERATE = ['default', 'lowercase', 'uppercase', 'compact', 'jetbrains'];
 
 /**
  * Recursively find all .cmake files in a directory

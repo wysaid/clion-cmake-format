@@ -70,8 +70,8 @@ function loadExpectedOutput(style: string, category: string, file: string): stri
 }
 
 describe('Dataset Formatting with Different Styles', () => {
-    // Get all available styles (excluding 'default' which is tested separately in well-formated.test.ts)
-    const styles = listWellFormatedStyles().filter(s => s !== 'default');
+    // Get all available styles (including default for consistency)
+    const styles = listWellFormatedStyles();
 
     styles.forEach(style => {
         describe(`Style: ${style}`, () => {
