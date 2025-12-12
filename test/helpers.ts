@@ -116,14 +116,14 @@ export function listDatasets(category: string, subcategory: string | null = null
 }
 
 /**
- * Get the path to the well-formatted directory (well-formated)
+ * Get the path to the well-formatted directory (well-formatted)
  */
 export function getWellFormatedPath(): string {
-    return path.join(__dirname, 'datasets', 'well-formated');
+    return path.join(__dirname, 'datasets', 'well-formatted');
 }
 
 /**
- * List all subdirectories in the well-formatted category (well-formated)
+ * List all subdirectories in the well-formatted category (well-formatted)
  * Each subdirectory represents a different format style
  */
 export function listWellFormatedStyles(): string[] {
