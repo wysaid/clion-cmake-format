@@ -5,6 +5,20 @@ All notable changes to the CLion CMake Formatter extension will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-12-14
+
+### Fixed
+
+- **CRLF line ending handling** — Fixed issue where files with CRLF line endings (Windows) would always show as needing formatting even when already well-formatted
+- **Extension comparison logic** — Now normalizes line endings before comparing original and formatted content
+- **Parser line ending normalization** — Fixed parser methods to convert CRLF to LF in multi-line arguments (quoted strings, bracket arguments, nested parentheses, bracket comments)
+- **Cross-platform formatting consistency** — Formatter now always outputs LF line endings (Unix standard) regardless of input, ensuring consistent behavior across platforms
+
+### Added
+
+- **CRLF tests** — Added 29 comprehensive test cases for CRLF line ending handling (Windows platform only)
+- **Line ending normalization tests** — Verifies correct handling of both LF and CRLF inputs
+
 ## [1.2.0] - 2025-12-13
 
 - New logo.
