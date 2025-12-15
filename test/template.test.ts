@@ -14,7 +14,7 @@ describe('CMake Template Project', () => {
             const expectedContent = `cmake_minimum_required(VERSION 3.10)
 project(${projectName})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${projectName} main.cpp)
@@ -70,7 +70,7 @@ int main() {
                 const cmakeContent = `cmake_minimum_required(VERSION 3.10)
 project(${projectName})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${projectName} main.cpp)
