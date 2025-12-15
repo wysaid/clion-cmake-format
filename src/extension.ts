@@ -397,11 +397,115 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     );
 
+    // Register a command to create a CMake template project
+    const createTemplateProjectCommand = vscode.commands.registerCommand(
+        'clion-cmake-format.createTemplateProject',
+        async () => {
+            // Ask user for target directory
+            const targetUri = await vscode.window.showOpenDialog({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: 'Select Folder',
+                title: 'Select folder to create CMake template project'
+            });
+
+            if (!targetUri || targetUri.length === 0) {
+                return;
+            }
+
+            const targetPath = targetUri[0].fsPath;
+
+            // Ask for project name
+            const projectName = await vscode.window.showInputBox({
+                prompt: 'Enter project name',
+                value: 'HelloWorld',
+                validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                        return 'Project name cannot be empty';
+                    }
+                    // Check for valid project name (alphanumeric, underscore, hyphen)
+                    if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+                        return 'Project name can only contain letters, numbers, underscores, and hyphens';
+                    }
+                    return null;
+                }
+            });
+
+            if (!projectName) {
+                return;
+            }
+
+            // Create project directory
+            const projectPath = path.join(targetPath, projectName);
+
+            // Check if project directory already exists
+            if (fs.existsSync(projectPath)) {
+                const overwrite = await vscode.window.showWarningMessage(
+                    `Directory '${projectName}' already exists at ${targetPath}`,
+                    'Continue',
+                    'Cancel'
+                );
+                if (overwrite !== 'Continue') {
+                    return;
+                }
+            } else {
+                try {
+                    fs.mkdirSync(projectPath, { recursive: true });
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : 'Unknown error';
+                    vscode.window.showErrorMessage(`Failed to create project directory: ${message}`);
+                    return;
+                }
+            }
+
+            try {
+                // Create CMakeLists.txt
+                const cmakeContent = `cmake_minimum_required(VERSION 3.10)
+project(${projectName})
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(${projectName} main.cpp)
+`;
+                const cmakePath = path.join(projectPath, 'CMakeLists.txt');
+                fs.writeFileSync(cmakePath, cmakeContent, 'utf-8');
+
+                // Create main.cpp
+                const cppContent = `#include <iostream>
+
+int main() {
+    std::cout << "Hello, world" << std::endl;
+    return 0;
+}
+`;
+                const cppPath = path.join(projectPath, 'main.cpp');
+                fs.writeFileSync(cppPath, cppContent, 'utf-8');
+
+                // Open the project in VS Code
+                const openFolder = await vscode.window.showInformationMessage(
+                    `CMake template project '${projectName}' created successfully at ${projectPath}`,
+                    'Open Folder',
+                    'Close'
+                );
+
+                if (openFolder === 'Open Folder') {
+                    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(projectPath), false);
+                }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                vscode.window.showErrorMessage(`Failed to create template project: ${message}`);
+            }
+        }
+    );
+
     context.subscriptions.push(
         formattingDisposable,
         rangeFormattingDisposable,
         formatCommand,
-        createConfigCommand
+        createConfigCommand,
+        createTemplateProjectCommand
     );
 
     // Log activation

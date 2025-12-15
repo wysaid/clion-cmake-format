@@ -58,6 +58,10 @@
             {
                 "command": "clion-cmake-format.createConfig",
                 "title": "%command.createConfig%"
+            },
+            {
+                "command": "clion-cmake-format.createTemplateProject",
+                "title": "%command.createTemplateProject%"
             }
         ],
         "configuration": {
