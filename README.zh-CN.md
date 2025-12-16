@@ -43,27 +43,27 @@
 
 ### 1️⃣ 安装
 
-**方式 A：从 VS Code 市场安装**（推荐）
+### 方式 A：从 VS Code 市场安装（推荐）
 1. 打开 VS Code
 2. 按 `Ctrl+Shift+X`（Mac 用户按 `Cmd+Shift+X`）
 3. 搜索 **"CLion CMake Format"**
 4. 点击 **安装**
 
-**方式 B：从 VSIX 文件安装**
+### 方式 B：从 VSIX 文件安装
 1. 从 [Releases](https://github.com/wysaid/clion-cmake-format/releases) 下载 `.vsix` 文件
 2. 在 VS Code 中打开扩展面板（`Ctrl+Shift+X`）
 3. 点击 `...` → **从 VSIX 安装...**
 
 ### 2️⃣ 格式化代码
 
-**方法 1：键盘快捷键**
+### 方法 1：键盘快捷键
 - 打开任何 `CMakeLists.txt` 或 `*.cmake` 文件
 - 按 `Shift+Alt+F`（Windows/Linux）或 `Shift+Option+F`（Mac）
 
-**方法 2：右键菜单**
+### 方法 2：右键菜单
 - 在编辑器中右键 → **格式化文档**
 
-**方法 3：保存时格式化**（推荐）
+### 方法 3：保存时格式化（推荐）
 
 在 VS Code `settings.json` 中添加：
 
@@ -200,7 +200,7 @@ endif ()
 
 ---
 
-## �📖 完整配置参考
+## 📖 完整配置参考
 
 ### 制表符和缩进
 

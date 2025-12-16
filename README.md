@@ -40,7 +40,7 @@ Use `.cc-format.jsonc` files to share formatting rules across your team. Support
 ### 🚀 Performance
 Pure TypeScript implementation. No spawning external processes. Fast, reliable, and efficient.
 
-## � Quick Start
+## 🚀 Quick Start
 
 ### 1️⃣ Install
 
@@ -50,21 +50,21 @@ Pure TypeScript implementation. No spawning external processes. Fast, reliable, 
 3. Search for **"CLion CMake Format"**
 4. Click **Install**
 
-#### Option B: From VSIX File
+### Option B: From VSIX File
 1. Download `.vsix` from [Releases](https://github.com/wysaid/clion-cmake-format/releases)
 2. Open Extensions in VS Code (`Ctrl+Shift+X`)
 3. Click `...` → **Install from VSIX...**
 
 ### 2️⃣ Format Your Code
 
-#### Method 1: Keyboard Shortcut
+### Method 1: Keyboard Shortcut
 - Open any `CMakeLists.txt` or `*.cmake` file
 - Press `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (Mac)
 
-#### Method 2: Context Menu
+### Method 2: Context Menu
 - Right-click in the editor → **Format Document**
 
-#### Method 3: Format on Save (Recommended)
+### Method 3: Format on Save (Recommended)
 
 Add to your VS Code `settings.json`:
 
@@ -191,7 +191,7 @@ Create `.cc-format.jsonc` in your project root:
 
 📖 **[View all 22 configuration options →](https://github.com/wysaid/clion-cmake-format#full-configuration-reference)**
 
-## � Additional Resources
+## 📚 Additional Resources
 
 - 📖 **[Complete Configuration Reference](#full-configuration-reference)** — All 22 options explained
 - 🛠️ **[Contributing Guide](CONTRIBUTING.md)** — Development setup, testing, and contribution guidelines
@@ -201,7 +201,7 @@ Create `.cc-format.jsonc` in your project root:
 
 ---
 
-## �📖 Full Configuration Reference
+## 📖 Full Configuration Reference
 
 ### Tab and Indentation
 
