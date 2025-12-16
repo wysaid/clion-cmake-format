@@ -39,7 +39,7 @@
 ### 🚀 性能卓越
 纯 TypeScript 实现。无需生成外部进程。快速、可靠、高效。
 
-## � 快速开始
+## 🚀 快速开始
 
 ### 1️⃣ 安装
 
@@ -188,11 +188,11 @@ endif ()
 }
 ```
 
-📖 **[查看全部 21 个配置选项 →](https://github.com/wysaid/clion-cmake-format/blob/main/README.zh-CN.md#完整配置参考)**
+📖 **[查看全部 22 个配置选项 →](https://github.com/wysaid/clion-cmake-format/blob/main/README.zh-CN.md#完整配置参考)**
 
-## � 其他资源
+## 📚 其他资源
 
-- 📖 **[完整配置参考](#完整配置参考)** — 全部 21 个选项详解
+- 📖 **[完整配置参考](#完整配置参考)** — 全部 22 个选项详解
 - 🛠️ **[贡献指南](CONTRIBUTING.md)** — 开发设置、测试和贡献指南（英文）
 - 📝 **[更新日志](CHANGELOG.md)** — 版本历史和更新
 - 🐛 **[问题反馈](https://github.com/wysaid/clion-cmake-format/issues)** — 错误报告和功能请求

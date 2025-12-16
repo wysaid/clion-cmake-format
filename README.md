@@ -8,7 +8,6 @@
 **Professional CMake code formatting for VS Code** — Format your `CMakeLists.txt` and `*.cmake` files with JetBrains CLion's proven formatting style. **Zero external dependencies** — no Python, cmake-format, or gersemi required. Pure TypeScript, lightning fast.
 
 > **Project Codename**: `cc-format` (CLion CMake Format)
-
 > **Why choose this formatter?** Precision, configurability, and zero hassle. If you value clean, maintainable CMake scripts, this is for you.
 
 English | [简体中文](README.zh-CN.md)
@@ -22,7 +21,7 @@ Precisely replicates JetBrains CLion's CMake formatting — trusted by millions 
 No Python installation. No pip packages. No configuration hell. Just install and format — it works out of the box.
 
 ### 🔧 Fully Customizable
-21 configuration options give you complete control:
+22 configuration options give you complete control:
 - **Indentation**: tabs, spaces, size, continuation
 - **Spacing**: before/inside parentheses for all command types
 - **Line Wrapping**: custom length, alignment rules
@@ -45,27 +44,27 @@ Pure TypeScript implementation. No spawning external processes. Fast, reliable, 
 
 ### 1️⃣ Install
 
-**Option A: From VS Code Marketplace** (Recommended)
+#### Option A: From VS Code Marketplace (Recommended)
 1. Open VS Code
 2. Press `Ctrl+Shift+X` (or `Cmd+Shift+X` on Mac)
 3. Search for **"CLion CMake Format"**
 4. Click **Install**
 
-**Option B: From VSIX File**
+#### Option B: From VSIX File
 1. Download `.vsix` from [Releases](https://github.com/wysaid/clion-cmake-format/releases)
 2. Open Extensions in VS Code (`Ctrl+Shift+X`)
 3. Click `...` → **Install from VSIX...**
 
 ### 2️⃣ Format Your Code
 
-**Method 1: Keyboard Shortcut**
+#### Method 1: Keyboard Shortcut
 - Open any `CMakeLists.txt` or `*.cmake` file
 - Press `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (Mac)
 
-**Method 2: Context Menu**
+#### Method 2: Context Menu
 - Right-click in the editor → **Format Document**
 
-**Method 3: Format on Save** (Recommended)
+#### Method 3: Format on Save (Recommended)
 
 Add to your VS Code `settings.json`:
 
@@ -190,11 +189,11 @@ Create `.cc-format.jsonc` in your project root:
 }
 ```
 
-📖 **[View all 21 configuration options →](https://github.com/wysaid/clion-cmake-format#full-configuration-reference)**
+📖 **[View all 22 configuration options →](https://github.com/wysaid/clion-cmake-format#full-configuration-reference)**
 
 ## � Additional Resources
 
-- 📖 **[Complete Configuration Reference](#full-configuration-reference)** — All 21 options explained
+- 📖 **[Complete Configuration Reference](#full-configuration-reference)** — All 22 options explained
 - 🛠️ **[Contributing Guide](CONTRIBUTING.md)** — Development setup, testing, and contribution guidelines
 - 📝 **[Changelog](CHANGELOG.md)** — Release history and updates
 - 🐛 **[Report Issues](https://github.com/wysaid/clion-cmake-format/issues)** — Bug reports and feature requests
