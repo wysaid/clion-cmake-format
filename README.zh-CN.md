@@ -3,47 +3,67 @@
 [![CI](https://github.com/wysaid/clion-cmake-format/actions/workflows/ci.yml/badge.svg)](https://github.com/wysaid/clion-cmake-format/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-blue.svg)](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/wysaid.clion-cmake-format)](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
 
-一个 VS Code 扩展，使用 JetBrains CLion 的格式化风格来格式化 CMake 文件（`CMakeLists.txt` 和 `*.cmake`）。**零外部依赖** — 无需 Python、cmake-format 或 gersemi。
+**VS Code 专业级 CMake 代码格式化工具** — 使用 JetBrains CLion 成熟的格式化风格，格式化您的 `CMakeLists.txt` 和 `*.cmake` 文件。**零外部依赖** — 无需 Python、cmake-format 或 gersemi。纯 TypeScript 实现，极速快捷。
 
-> **项目代号**: `cc-format` (CLion CMake Format)
+> **为什么选择这个格式化工具？** 精准、可配置、零麻烦。如果您重视简洁、可维护的 CMake 脚本，这就是您的选择。
 
 [English](README.md) | 简体中文
 
-## ✨ 功能特性
+## ✨ 为什么选择这个扩展？
 
-- 🎯 **CLion 兼容格式化** — 精确复刻 JetBrains CLion 的 CMake 格式化行为
-- 🔧 **高度可配置** — 21 个配置选项，涵盖缩进、空格、换行等
-- 📁 **项目级配置** — 支持 `.cc-format.jsonc` 文件，自动监听变化
-- 🚀 **零依赖** — 纯 TypeScript 实现，快速可靠
-- 🌍 **多语言支持** — 中英文界面
-- ✅ **全面测试** — 126+ 单元测试，含幂等性验证
+### 🎯 CLion 品质格式化
+精确复刻 JetBrains CLion 的 CMake 格式化 — 全球数百万专业开发者信赖的工具。让您的整个团队获得一致、可读的代码。
 
-## 📦 安装
+### ⚡ 零配置开箱即用
+无需安装 Python。无需 pip 包。无需配置困扰。只需安装即可格式化 — 开箱即用。
 
-### 从 VS Code 市场安装
+### 🔧 完全可自定义
+21 个配置选项让您完全掌控：
+- **缩进**：制表符、空格、大小、续行
+- **空格**：所有命令类型的括号前后空格
+- **换行**：自定义长度、对齐规则
+- **命令大小写**：小写、大写或保持不变
+- **更多**：空行、项目配置、自动监听
 
+### 📁 项目级配置文件
+使用 `.cc-format.jsonc` 文件在团队间共享格式化规则。支持自动文件监听 — 更改立即生效。
+
+### ✅ 经过充分测试
+- **126+ 单元测试** 确保坚如磐石的可靠性
+- **幂等性验证** — 格式化两次产生相同结果
+- **CMake 官方测试** — CMake 仓库中的 20 个真实文件（6,302 行）
+- **100% 通过率** ✅
+
+### 🚀 性能卓越
+纯 TypeScript 实现。无需生成外部进程。快速、可靠、高效。
+
+## � 快速开始
+
+### 1️⃣ 安装
+
+**方式 A：从 VS Code 市场安装**（推荐）
 1. 打开 VS Code
-2. 进入扩展 (`Ctrl+Shift+X`)
-3. 搜索 "**CLion CMake Formatter**"
+2. 按 `Ctrl+Shift+X`（Mac 用户按 `Cmd+Shift+X`）
+3. 搜索 **"CLion CMake Format"**
 4. 点击 **安装**
 
-### 从 VSIX 安装
-
-1. 从 [Releases](https://github.com/wysaid/clion-cmake-format/releases) 页面下载 `.vsix` 文件
-2. 在 VS Code 中，进入扩展 (`Ctrl+Shift+X`)
+**方式 B：从 VSIX 文件安装**
+1. 从 [Releases](https://github.com/wysaid/clion-cmake-format/releases) 下载 `.vsix` 文件
+2. 在 VS Code 中打开扩展面板（`Ctrl+Shift+X`）
 3. 点击 `...` → **从 VSIX 安装...**
-4. 选择下载的文件
 
-## 🚀 快速开始
+### 2️⃣ 格式化代码
 
-### 格式化文档
+**方法 1：键盘快捷键**
+- 打开任何 `CMakeLists.txt` 或 `*.cmake` 文件
+- 按 `Shift+Alt+F`（Windows/Linux）或 `Shift+Option+F`（Mac）
 
-- 打开 `CMakeLists.txt` 或 `*.cmake` 文件
-- 按 `Shift+Alt+F` (Windows/Linux) 或 `Shift+Option+F` (Mac)
-- 或右键 → **格式化文档**
+**方法 2：右键菜单**
+- 在编辑器中右键 → **格式化文档**
 
-### 启用保存时格式化
+**方法 3：保存时格式化**（推荐）
 
 在 VS Code `settings.json` 中添加：
 
@@ -56,13 +76,19 @@
 }
 ```
 
-### 创建项目配置文件
+### 3️⃣（可选）创建项目配置
 
-1. 打开命令面板 (`Ctrl+Shift+P`)
-2. 运行 **CLion CMake 格式化工具: 创建默认配置文件**
-3. 将在项目根目录创建 `.cc-format.jsonc` 文件
+与团队共享格式化规则：
 
-## 📋 示例
+1. 打开命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`）
+2. 运行 **"CLion CMake 格式化工具: 创建默认配置文件"**
+3. 在项目根目录编辑 `.cc-format.jsonc`
+
+更改会自动应用 — 无需重启！
+
+## 📋 格式化前后对比
+
+### 示例 1：基本格式化
 
 **格式化前：**
 ```cmake
@@ -89,41 +115,92 @@ if (WIN32)
 endif ()
 ```
 
-## ⚙️ 配置
+### 示例 2：复杂项目
 
-配置可通过以下方式设置：
-1. **VS Code 设置** — 全局或工作区设置
-2. **项目文件** — 项目根目录的 `.cc-format.jsonc`
+无缝支持：
+- ✅ 带参数的多行命令
+- ✅ 嵌套 `if`/`else`/`endif` 块
+- ✅ `foreach` 和 `while` 循环
+- ✅ 函数和宏定义
+- ✅ 注释（行内和独立）
+- ✅ 引号字符串和转义序列
+- ✅ 生成器表达式
 
-### 主要选项
+## ⚙️ 配置选项
 
-| 选项 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| `indentSize` | number | `4` | 每个缩进级别的空格数 (1-16) |
-| `useTabs` | boolean | `false` | 使用制表符代替空格 |
-| `commandCase` | string | `"unchanged"` | 命令大小写：`unchanged`、`lowercase`、`uppercase` |
-| `lineLength` | number | `0` | 最大行长度 (0 = 不限制) |
-| `maxBlankLines` | number | `2` | 最大连续空行数 (0-20) |
-| `spaceBeforeIfParentheses` | boolean | `true` | `if()` 括号前空格 |
-| `enableProjectConfig` | boolean | `true` | 启用 `.cc-format.jsonc` 读取 |
+通过以下方式自定义格式化行为：
+1. **VS Code 设置** — 全局或工作区级别
+2. **项目配置文件** — 项目根目录的 `.cc-format.jsonc`（优先级更高）
 
-📖 查看下方[完整配置参考](#完整配置参考)了解全部 21 个选项。
+### 常用配置选项
 
-### 项目配置文件
+| 选项 | 默认值 | 描述 |
+|------|--------|------|
+| `indentSize` | `4` | 每个缩进级别的空格数（1-16） |
+| `useTabs` | `false` | 使用制表符代替空格 |
+| `commandCase` | `"unchanged"` | 命令大小写：`unchanged` / `lowercase` / `uppercase` |
+| `lineLength` | `0` | 最大行长度（0 = 不限制，设置时最小 30） |
+| `maxBlankLines` | `2` | 最大连续空行数（0-20） |
+| `spaceBeforeIfParentheses` | `true` | `if ()` / `elseif ()` / `endif ()` 括号前空格 |
+| `spaceBeforeForeachParentheses` | `true` | `foreach ()` / `endforeach ()` 括号前空格 |
+| `alignMultiLineArguments` | `false` | 垂直对齐参数 |
+| `enableProjectConfig` | `true` | 启用读取 `.cc-format.jsonc` 文件 |
+
+### 项目配置文件示例
 
 在项目根目录创建 `.cc-format.jsonc`：
 
 ```jsonc
 // https://github.com/wysaid/clion-cmake-format
 {
+    // Tab and Indentation
+    "useTabs": false,
+    "tabSize": 4,
     "indentSize": 4,
-    "commandCase": "lowercase",
+    "continuationIndentSize": 4,
+    "keepIndentOnEmptyLines": false,
+
+    // Spacing Before Parentheses
+    "spaceBeforeCommandDefinitionParentheses": false,
+    "spaceBeforeCommandCallParentheses": false,
     "spaceBeforeIfParentheses": true,
-    "lineLength": 120
+    "spaceBeforeForeachParentheses": true,
+    "spaceBeforeWhileParentheses": true,
+
+    // Spacing Inside Parentheses
+    "spaceInsideCommandDefinitionParentheses": false,
+    "spaceInsideCommandCallParentheses": false,
+    "spaceInsideIfParentheses": false,
+    "spaceInsideForeachParentheses": false,
+    "spaceInsideWhileParentheses": false,
+
+    // Blank Lines
+    "maxBlankLines": 2,
+
+    // Command Case: "unchanged", "lowercase", or "uppercase"
+    "commandCase": "unchanged",
+
+    // Line Wrapping and Alignment
+    "lineLength": 0,
+    "alignMultiLineArguments": false,
+    "alignMultiLineParentheses": false,
+    "alignControlFlowParentheses": false
 }
 ```
 
-## 📖 完整配置参考
+📖 **[查看全部 21 个配置选项 →](https://github.com/wysaid/clion-cmake-format/blob/main/README.zh-CN.md#完整配置参考)**
+
+## � 其他资源
+
+- 📖 **[完整配置参考](#完整配置参考)** — 全部 21 个选项详解
+- 🛠️ **[贡献指南](CONTRIBUTING.md)** — 开发设置、测试和贡献指南（英文）
+- 📝 **[更新日志](CHANGELOG.md)** — 版本历史和更新
+- 🐛 **[问题反馈](https://github.com/wysaid/clion-cmake-format/issues)** — 错误报告和功能请求
+- 💬 **[讨论区](https://github.com/wysaid/clion-cmake-format/discussions)** — 问题和社区支持
+
+---
+
+## �📖 完整配置参考
 
 ### 制表符和缩进
 
@@ -172,88 +249,92 @@ endif ()
 | `maxBlankLines` | number | `2` | 最大连续空行数 (0-20) |
 | `enableProjectConfig` | boolean | `true` | 启用 `.cc-format.jsonc` 文件 |
 
-## 🛠️ 开发
+---
 
-### 前提条件
+## 💡 提示与最佳实践
 
-- Node.js 18+
-- npm
+### 格式化行为
 
-### 设置
+- **幂等性**：格式化两次产生相同输出
+- **注释保留**：所有注释（行内和独立）都会保留
+- **空白处理**：智能空白规范化，不丢失数据
+- **换行**：智能换行遵循 `lineLength` 设置
 
-```bash
-git clone https://github.com/wysaid/clion-cmake-format.git
-cd clion-cmake-format
-npm install
-npm run compile
-npm run test:unit
+### 团队推荐设置
+
+```jsonc
+{
+    "commandCase": "lowercase",           // 现代 CMake 约定
+    "indentSize": 4,                      // 标准缩进
+    "lineLength": 120,                    // 可读行长度
+    "maxBlankLines": 1,                   // 紧凑格式
+    "spaceBeforeIfParentheses": true,     // 清晰的控制流
+    "spaceBeforeForeachParentheses": true,
+    "spaceBeforeWhileParentheses": true
+}
 ```
 
-### 可用脚本
+### 与 CLion 的差异
 
-| 脚本 | 描述 |
-|------|------|
-| `npm run compile` | 编译 TypeScript |
-| `npm run watch` | 监听模式编译 |
-| `npm run lint` | 运行 ESLint |
-| `npm run test:unit` | 运行所有单元测试 |
-| `npm run package` | 打包为 `.vsix` |
+本扩展旨在兼容 CLion，但有**一个有意的增强**：
 
-### 项目结构
-
-```
-clion-cmake-format/
-├── src/
-│   ├── parser.ts      # CMake 分词器和 AST 构建器
-│   ├── formatter.ts   # 格式化逻辑
-│   ├── config.ts      # 配置文件支持
-│   └── extension.ts   # VS Code 集成
-├── test/
-│   └── datasets/      # 测试数据
-├── resources/
-│   └── cc-format.schema.json  # JSON Schema
-└── docs/              # 其他文档
-```
-
-### 调试
-
-1. 在 VS Code 中打开此项目
-2. 按 `F5` 或进入 **运行和调试**
-3. 选择 **Launch Extension**
-4. 新的 VS Code 窗口将打开并加载扩展
-
-## 📊 测试覆盖
-
-- **126+ 单元测试** 覆盖解析器、格式化器和配置
-- **幂等性测试** — 格式化两次产生相同输出
-- **CMake 官方测试** — CMake 仓库的 20 个文件 (6,302 行)
-- **100% 通过率** ✅
-
-## 🔄 与 CLion 的差异
-
-本扩展旨在兼容 CLion，但有一个有意的差异：
-
-**循环控制命令**（`break`/`continue`）：遵循其父循环（`foreach`/`while`）相同的空格规则，而 CLion 对这些命令忽略空格规则。
+**循环控制命令**（`break`/`continue`）遵循其父循环的空格规则，提供更一致的格式化：
 
 ```cmake
 # 当 spaceBeforeForeachParentheses: true 时
 foreach (item IN LISTS items)
-    break ()      # 与 foreach () 保持一致
+    if (condition)
+        break ()      # 与 foreach () 保持一致
+    endif ()
 endforeach ()
 ```
 
+*CLion 对 `break`/`continue` 忽略空格规则，可能会感觉不一致。*
+
+---
+
+## 🛠️ 开发者指南
+
+想要贡献或自定义扩展？查看我们的 **[贡献指南](CONTRIBUTING.md)**（英文），了解：
+
+- 🔧 开发环境设置
+- 📜 可用的 npm 脚本
+- 📂 项目结构概览
+- 🐛 调试说明
+- ✅ 测试指南
+- 📝 代码风格和 PR 指南
+
+**开发快速开始：**
+```bash
+git clone https://github.com/wysaid/clion-cmake-format.git
+cd clion-cmake-format
+npm install && npm run compile && npm run test:unit
+```
+
+---
+
 ## 📜 许可证
 
-[MIT](LICENSE) © [wysaid](https://github.com/wysaid)
+[MIT 许可证](LICENSE) © [wysaid](https://github.com/wysaid)
+
+个人和商业使用均免费。
+
+---
 
 ## 🙏 致谢
 
-- [ege-vscode-plugin](https://github.com/x-ege/ege-vscode-plugin) — VS Code 扩展开发实践
-- [cmake_format](https://github.com/cheshirekow/cmake_format) — 配置选项灵感来源
+- **[JetBrains CLion](https://www.jetbrains.com/clion/)** — 格式化行为的灵感来源
+- **[cmake_format](https://github.com/cheshirekow/cmake_format)** — 配置选项参考
+- **[ege-vscode-plugin](https://github.com/x-ege/ege-vscode-plugin)** — VS Code 扩展开发实践
 
-## 🔗 链接
+---
 
-- [VS Code 市场](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
-- [GitHub 仓库](https://github.com/wysaid/clion-cmake-format)
-- [问题反馈](https://github.com/wysaid/clion-cmake-format/issues)
-- [更新日志](CHANGELOG.md)
+## 🌟 支持本项目
+
+如果这个扩展帮助了您，请考虑：
+- ⭐ **[在 GitHub 上点赞](https://github.com/wysaid/clion-cmake-format)**
+- ✍️ **[留下评价](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format&ssr=false#review-details)**
+- 🐛 **[报告问题](https://github.com/wysaid/clion-cmake-format/issues)**
+- 💬 **[分享反馈](https://github.com/wysaid/clion-cmake-format/discussions)**
+
+谢谢您！🙌

@@ -15,15 +15,26 @@
     ],
     "keywords": [
         "cmake",
+        "CMakeLists.txt",
         "clion",
-        "format",
         "formatter",
         "formatting",
-        "CMakeLists",
+        "beautify",
         "jetbrains",
         "cc-format",
         "indent",
-        "code-style"
+        "indentation",
+        "code-style",
+        "cmake format",
+        "cmake formatter",
+        "build system",
+        "c++",
+        "cpp",
+        "cmake-format",
+        "gersemi",
+        "zero dependencies",
+        "code quality",
+        "auto-format"
     ],
     "activationEvents": [
         "onLanguage:cmake"

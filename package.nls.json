@@ -1,6 +1,6 @@
 {
     "displayName": "CLion CMake Format",
-    "description": "Format CMakeLists.txt files with CLion's indentation and spacing style",
+    "description": "Zero-dependency CMake formatter for VS Code. Formats CMakeLists.txt and .cmake files using CLion's proven formatting style - no Python, no external tools required. Pure TypeScript with 21 configuration options.",
     "config.title": "CLion CMake Format",
     "config.useTabs.description": "Use tabs for indentation instead of spaces",
     "config.tabSize.description": "Number of spaces equivalent to one tab (1-16)",

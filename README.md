@@ -1,49 +1,71 @@
-# CLion CMake Formatter
+# CLion CMake Format
 
 [![CI](https://github.com/wysaid/clion-cmake-format/actions/workflows/ci.yml/badge.svg)](https://github.com/wysaid/clion-cmake-format/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-blue.svg)](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/wysaid.clion-cmake-format)](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
 
-A VS Code extension that formats CMake files (`CMakeLists.txt` and `*.cmake`) using JetBrains CLion's formatting style. **Zero external dependencies** — no Python, cmake-format, or gersemi required.
+**Professional CMake code formatting for VS Code** — Format your `CMakeLists.txt` and `*.cmake` files with JetBrains CLion's proven formatting style. **Zero external dependencies** — no Python, cmake-format, or gersemi required. Pure TypeScript, lightning fast.
 
 > **Project Codename**: `cc-format` (CLion CMake Format)
 
+> **Why choose this formatter?** Precision, configurability, and zero hassle. If you value clean, maintainable CMake scripts, this is for you.
+
 English | [简体中文](README.zh-CN.md)
 
-## ✨ Features
+## ✨ Why This Extension?
 
-- 🎯 **CLion-Compatible Formatting** — Precisely replicates JetBrains CLion's CMake formatting behavior
-- 🔧 **Highly Configurable** — 21 configuration options for indentation, spacing, line wrapping, and more
-- 📁 **Project-Level Configuration** — Support for `.cc-format.jsonc` files with automatic watching
-- 🚀 **Zero Dependencies** — Pure TypeScript implementation, fast and reliable
-- 🌍 **Multi-Language Support** — English and Chinese interface
-- ✅ **Thoroughly Tested** — 126+ unit tests with idempotency validation
+### 🎯 CLion-Quality Formatting
+Precisely replicates JetBrains CLion's CMake formatting — trusted by millions of professional developers worldwide. Get consistent, readable code across your entire team.
 
-## 📦 Installation
+### ⚡ Zero Setup Required
+No Python installation. No pip packages. No configuration hell. Just install and format — it works out of the box.
 
-### From VS Code Marketplace
+### 🔧 Fully Customizable
+21 configuration options give you complete control:
+- **Indentation**: tabs, spaces, size, continuation
+- **Spacing**: before/inside parentheses for all command types
+- **Line Wrapping**: custom length, alignment rules
+- **Command Case**: lowercase, UPPERCASE, or unchanged
+- **And more**: blank lines, project configs, auto-watch
 
+### 📁 Project-Level Config Files
+Use `.cc-format.jsonc` files to share formatting rules across your team. Supports automatic file watching — changes apply instantly.
+
+### ✅ Battle-Tested Quality
+- **126+ unit tests** ensuring rock-solid reliability
+- **Idempotency validated** — formatting twice gives identical results
+- **CMake official tests** — 20 real-world files from CMake's own repository (6,302 lines)
+- **100% pass rate** ✅
+
+### 🚀 Performance
+Pure TypeScript implementation. No spawning external processes. Fast, reliable, and efficient.
+
+## � Quick Start
+
+### 1️⃣ Install
+
+**Option A: From VS Code Marketplace** (Recommended)
 1. Open VS Code
-2. Go to Extensions (`Ctrl+Shift+X`)
-3. Search for "**CLion CMake Formatter**"
+2. Press `Ctrl+Shift+X` (or `Cmd+Shift+X` on Mac)
+3. Search for **"CLion CMake Format"**
 4. Click **Install**
 
-### From VSIX
-
-1. Download the `.vsix` file from the [Releases](https://github.com/wysaid/clion-cmake-format/releases) page
-2. In VS Code, go to Extensions (`Ctrl+Shift+X`)
+**Option B: From VSIX File**
+1. Download `.vsix` from [Releases](https://github.com/wysaid/clion-cmake-format/releases)
+2. Open Extensions in VS Code (`Ctrl+Shift+X`)
 3. Click `...` → **Install from VSIX...**
-4. Select the downloaded file
 
-## 🚀 Quick Start
+### 2️⃣ Format Your Code
 
-### Format a Document
-
-- Open a `CMakeLists.txt` or `*.cmake` file
+**Method 1: Keyboard Shortcut**
+- Open any `CMakeLists.txt` or `*.cmake` file
 - Press `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (Mac)
-- Or right-click → **Format Document**
 
-### Enable Format on Save
+**Method 2: Context Menu**
+- Right-click in the editor → **Format Document**
+
+**Method 3: Format on Save** (Recommended)
 
 Add to your VS Code `settings.json`:
 
@@ -56,13 +78,19 @@ Add to your VS Code `settings.json`:
 }
 ```
 
-### Create a Project Configuration File
+### 3️⃣ (Optional) Create Project Config
 
-1. Open the Command Palette (`Ctrl+Shift+P`)
-2. Run **CLion CMake Formatter: Create Default Configuration File**
-3. A `.cc-format.jsonc` file will be created in your project root
+Share formatting rules with your team:
 
-## 📋 Example
+1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Run **"CLion CMake Format: Create Default Configuration File"**
+3. Edit `.cc-format.jsonc` in your project root
+
+Changes are applied automatically — no restart needed!
+
+## 📋 Before & After Examples
+
+### Example 1: Basic Formatting
 
 **Before:**
 ```cmake
@@ -89,41 +117,92 @@ if (WIN32)
 endif ()
 ```
 
-## ⚙️ Configuration
+### Example 2: Complex Projects
 
-Configuration can be set via:
-1. **VS Code Settings** — Global or workspace settings
-2. **Project File** — `.cc-format.jsonc` in your project root
+Works seamlessly with:
+- ✅ Multi-line commands with arguments
+- ✅ Nested `if`/`else`/`endif` blocks
+- ✅ `foreach` and `while` loops
+- ✅ Function and macro definitions
+- ✅ Comments (inline and standalone)
+- ✅ Quoted strings and escape sequences
+- ✅ Generator expressions
 
-### Key Options
+## ⚙️ Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `indentSize` | number | `4` | Spaces per indentation level (1-16) |
-| `useTabs` | boolean | `false` | Use tabs instead of spaces |
-| `commandCase` | string | `"unchanged"` | Command case: `unchanged`, `lowercase`, `uppercase` |
-| `lineLength` | number | `0` | Max line length (0 = unlimited) |
-| `maxBlankLines` | number | `2` | Max consecutive blank lines (0-20) |
-| `spaceBeforeIfParentheses` | boolean | `true` | Space before `if()` parentheses |
-| `enableProjectConfig` | boolean | `true` | Enable `.cc-format.jsonc` reading |
+Customize formatting behavior via:
+1. **VS Code Settings** — Global or per-workspace
+2. **Project Config File** — `.cc-format.jsonc` in your project root (takes precedence)
 
-📖 See [full configuration reference](#full-configuration-reference) below for all 21 options.
+### Popular Configuration Options
 
-### Project Configuration File
+| Option | Default | Description |
+|--------|---------|-------------|
+| `indentSize` | `4` | Spaces per indentation level (1-16) |
+| `useTabs` | `false` | Use tabs instead of spaces |
+| `commandCase` | `"unchanged"` | Command case: `unchanged` / `lowercase` / `uppercase` |
+| `lineLength` | `0` | Max line length (0 = unlimited, min 30 if set) |
+| `maxBlankLines` | `2` | Maximum consecutive blank lines (0-20) |
+| `spaceBeforeIfParentheses` | `true` | Space before `if ()` / `elseif ()` / `endif ()` |
+| `spaceBeforeForeachParentheses` | `true` | Space before `foreach ()` / `endforeach ()` |
+| `alignMultiLineArguments` | `false` | Align arguments vertically |
+| `enableProjectConfig` | `true` | Enable reading `.cc-format.jsonc` files |
+
+### Sample Project Config
 
 Create `.cc-format.jsonc` in your project root:
 
 ```jsonc
 // https://github.com/wysaid/clion-cmake-format
 {
+    // Tab and Indentation
+    "useTabs": false,
+    "tabSize": 4,
     "indentSize": 4,
-    "commandCase": "lowercase",
+    "continuationIndentSize": 4,
+    "keepIndentOnEmptyLines": false,
+
+    // Spacing Before Parentheses
+    "spaceBeforeCommandDefinitionParentheses": false,
+    "spaceBeforeCommandCallParentheses": false,
     "spaceBeforeIfParentheses": true,
-    "lineLength": 120
+    "spaceBeforeForeachParentheses": true,
+    "spaceBeforeWhileParentheses": true,
+
+    // Spacing Inside Parentheses
+    "spaceInsideCommandDefinitionParentheses": false,
+    "spaceInsideCommandCallParentheses": false,
+    "spaceInsideIfParentheses": false,
+    "spaceInsideForeachParentheses": false,
+    "spaceInsideWhileParentheses": false,
+
+    // Blank Lines
+    "maxBlankLines": 2,
+
+    // Command Case: "unchanged", "lowercase", or "uppercase"
+    "commandCase": "unchanged",
+
+    // Line Wrapping and Alignment
+    "lineLength": 0,
+    "alignMultiLineArguments": false,
+    "alignMultiLineParentheses": false,
+    "alignControlFlowParentheses": false
 }
 ```
 
-## 📖 Full Configuration Reference
+📖 **[View all 21 configuration options →](https://github.com/wysaid/clion-cmake-format#full-configuration-reference)**
+
+## � Additional Resources
+
+- 📖 **[Complete Configuration Reference](#full-configuration-reference)** — All 21 options explained
+- 🛠️ **[Contributing Guide](CONTRIBUTING.md)** — Development setup, testing, and contribution guidelines
+- 📝 **[Changelog](CHANGELOG.md)** — Release history and updates
+- 🐛 **[Report Issues](https://github.com/wysaid/clion-cmake-format/issues)** — Bug reports and feature requests
+- 💬 **[Discussions](https://github.com/wysaid/clion-cmake-format/discussions)** — Questions and community support
+
+---
+
+## �📖 Full Configuration Reference
 
 ### Tab and Indentation
 
@@ -172,88 +251,92 @@ Create `.cc-format.jsonc` in your project root:
 | `maxBlankLines` | number | `2` | Max consecutive blank lines (0-20) |
 | `enableProjectConfig` | boolean | `true` | Enable `.cc-format.jsonc` files |
 
-## 🛠️ Development
+---
 
-### Prerequisites
+## 💡 Tips & Best Practices
 
-- Node.js 18+
-- npm
+### Formatting Behavior
 
-### Setup
+- **Idempotent**: Formatting twice produces identical output
+- **Comment Preservation**: All comments (inline and standalone) are preserved
+- **Whitespace Handling**: Smart whitespace normalization without data loss
+- **Line Wrapping**: Intelligent line breaking respects `lineLength` setting
 
-```bash
-git clone https://github.com/wysaid/clion-cmake-format.git
-cd clion-cmake-format
-npm install
-npm run compile
-npm run test:unit
+### Recommended Settings for Teams
+
+```jsonc
+{
+    "commandCase": "lowercase",           // Modern CMake convention
+    "indentSize": 4,                      // Standard indentation
+    "lineLength": 120,                    // Readable line length
+    "maxBlankLines": 1,                   // Compact formatting
+    "spaceBeforeIfParentheses": true,     // Clear control flow
+    "spaceBeforeForeachParentheses": true,
+    "spaceBeforeWhileParentheses": true
+}
 ```
 
-### Available Scripts
+### Differences from CLion
 
-| Script | Description |
-|--------|-------------|
-| `npm run compile` | Compile TypeScript |
-| `npm run watch` | Watch mode compilation |
-| `npm run lint` | Run ESLint |
-| `npm run test:unit` | Run all unit tests |
-| `npm run package` | Package as `.vsix` |
+This extension aims for CLion compatibility with **one intentional enhancement**:
 
-### Project Structure
-
-```
-clion-cmake-format/
-├── src/
-│   ├── parser.ts      # CMake tokenizer and AST builder
-│   ├── formatter.ts   # Formatting logic
-│   ├── config.ts      # Configuration file support
-│   └── extension.ts   # VS Code integration
-├── test/
-│   └── datasets/      # Test fixtures
-├── resources/
-│   └── cc-format.schema.json  # JSON Schema
-└── docs/              # Additional documentation
-```
-
-### Debugging
-
-1. Open this project in VS Code
-2. Press `F5` or go to **Run and Debug**
-3. Select **Launch Extension**
-4. A new VS Code window opens with the extension loaded
-
-## 📊 Test Coverage
-
-- **126+ unit tests** covering parser, formatter, and configuration
-- **Idempotency tests** — formatting twice produces identical output
-- **CMake official tests** — 20 files from CMake repository (6,302 lines)
-- **100% pass rate** ✅
-
-## 🔄 Differences from CLion
-
-This extension aims for CLion compatibility, with one intentional difference:
-
-**Loop Control Commands** (`break`/`continue`): Follow the same spacing rules as their parent loop (`foreach`/`while`), unlike CLion which ignores spacing for these commands.
+**Loop Control Commands** (`break`/`continue`) follow their parent loop's spacing rules, providing more consistent formatting:
 
 ```cmake
 # With spaceBeforeForeachParentheses: true
 foreach (item IN LISTS items)
-    break ()      # Consistent with foreach ()
+    if (condition)
+        break ()      # Consistent with foreach ()
+    endif ()
 endforeach ()
 ```
 
+*CLion ignores spacing rules for `break`/`continue`, which can feel inconsistent.*
+
+---
+
+## 🛠️ For Developers
+
+Want to contribute or customize the extension? Check out our **[Contributing Guide](CONTRIBUTING.md)** for:
+
+- 🔧 Development environment setup
+- 📜 Available npm scripts
+- 📂 Project structure overview
+- 🐛 Debugging instructions
+- ✅ Testing guidelines
+- 📝 Code style and PR guidelines
+
+**Quick Start for Development:**
+```bash
+git clone https://github.com/wysaid/clion-cmake-format.git
+cd clion-cmake-format
+npm install && npm run compile && npm run test:unit
+```
+
+---
+
 ## 📜 License
 
-[MIT](LICENSE) © [wysaid](https://github.com/wysaid)
+[MIT License](LICENSE) © [wysaid](https://github.com/wysaid)
+
+Free for personal and commercial use.
+
+---
 
 ## 🙏 Acknowledgments
 
-- [ege-vscode-plugin](https://github.com/x-ege/ege-vscode-plugin) — VS Code extension development practices
-- [cmake_format](https://github.com/cheshirekow/cmake_format) — Configuration options inspiration
+- **[JetBrains CLion](https://www.jetbrains.com/clion/)** — Inspiration for formatting behavior
+- **[cmake_format](https://github.com/cheshirekow/cmake_format)** — Configuration options reference
+- **[ege-vscode-plugin](https://github.com/x-ege/ege-vscode-plugin)** — VS Code extension development practices
 
-## 🔗 Links
+---
 
-- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
-- [GitHub Repository](https://github.com/wysaid/clion-cmake-format)
-- [Report Issues](https://github.com/wysaid/clion-cmake-format/issues)
-- [Changelog](CHANGELOG.md)
+## 🌟 Support This Project
+
+If this extension helped you, consider:
+- ⭐ **[Star on GitHub](https://github.com/wysaid/clion-cmake-format)**
+- ✍️ **[Leave a review](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format&ssr=false#review-details)**
+- 🐛 **[Report issues](https://github.com/wysaid/clion-cmake-format/issues)**
+- 💬 **[Share feedback](https://github.com/wysaid/clion-cmake-format/discussions)**
+
+Thank you! 🙌
