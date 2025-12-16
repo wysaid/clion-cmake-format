@@ -2,7 +2,7 @@
     "name": "clion-cmake-format",
     "displayName": "%displayName%",
     "description": "%description%",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "publisher": "wysaid",
     "license": "MIT",
     "icon": "logo.png",
