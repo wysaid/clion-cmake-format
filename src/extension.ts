@@ -1,5 +1,5 @@
 /**
- * VSCode Extension - CLion CMake Formatter (cc-format)
+ * VSCode Extension - CLion CMake Format (cc-format)
  *
  * Provides document formatting for CMake files using CLion's formatting style.
  * Supports project-level configuration via .cc-format.jsonc files.
@@ -405,7 +405,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     // Log activation
-    console.log('CLion CMake Formatter extension is now active');
+    console.log('CLion CMake Format extension is now active');
 }
 
 /**

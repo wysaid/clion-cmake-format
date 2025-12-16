@@ -1,6 +1,6 @@
 # Test Datasets
 
-This directory contains test datasets for the CLion CMake Formatter, organized by functionality and test scenarios.
+This directory contains test datasets for the CLion CMake Format, organized by functionality and test scenarios.
 
 ## Directory Structure
 
