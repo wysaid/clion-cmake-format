@@ -13,6 +13,11 @@
     "sourceMap": true,
     "resolveJsonModule": true
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
 }

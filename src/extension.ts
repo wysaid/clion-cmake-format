@@ -15,6 +15,44 @@ import { getConfigForDocument, clearConfigCache, generateSampleConfig, DEFAULT_O
 const shownWarnings = new Set<string>();
 
 /**
+ * Copy a file from source to destination, replacing placeholders
+ */
+function copyTemplateFile(sourcePath: string, destPath: string, replacements: Record<string, string>): void {
+    let content = fs.readFileSync(sourcePath, 'utf-8');
+    
+    // Replace all placeholders
+    for (const [key, value] of Object.entries(replacements)) {
+        const placeholder = `{{${key}}}`;
+        content = content.split(placeholder).join(value);
+    }
+    
+    fs.writeFileSync(destPath, content, 'utf-8');
+}
+
+/**
+ * Recursively copy a directory
+ */
+function copyDirectoryRecursive(sourceDir: string, destDir: string, replacements: Record<string, string>): void {
+    // Create destination directory if it doesn't exist
+    if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const sourcePath = path.join(sourceDir, entry.name);
+        const destPath = path.join(destDir, entry.name);
+
+        if (entry.isDirectory()) {
+            copyDirectoryRecursive(sourcePath, destPath, replacements);
+        } else if (entry.isFile()) {
+            copyTemplateFile(sourcePath, destPath, replacements);
+        }
+    }
+}
+
+/**
  * Validate numeric value within a range
  */
 function validateRange(value: number, min: number, max: number, name: string): number {
@@ -397,11 +435,110 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     );
 
+    // Register a command to create a CMake template project
+    const createTemplateProjectCommand = vscode.commands.registerCommand(
+        'clion-cmake-format.createTemplateProject',
+        async () => {
+            // Ask user for target directory
+            const targetUri = await vscode.window.showOpenDialog({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: 'Select Folder',
+                title: 'Select folder to create CMake template project'
+            });
+
+            if (!targetUri || targetUri.length === 0) {
+                return;
+            }
+
+            const targetPath = targetUri[0].fsPath;
+
+            // Ask for project name
+            const projectName = await vscode.window.showInputBox({
+                prompt: 'Enter project name',
+                value: 'HelloWorld',
+                validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                        return 'Project name cannot be empty';
+                    }
+                    // Check for valid project name (alphanumeric, underscore, hyphen)
+                    if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+                        return 'Project name can only contain letters, numbers, underscores, and hyphens';
+                    }
+                    return null;
+                }
+            });
+
+            if (!projectName) {
+                return;
+            }
+
+            // Create project directory
+            const projectPath = path.join(targetPath, projectName);
+
+            // Check if project directory already exists
+            if (fs.existsSync(projectPath)) {
+                const overwrite = await vscode.window.showWarningMessage(
+                    `Directory '${projectName}' already exists at ${targetPath}`,
+                    'Continue',
+                    'Cancel'
+                );
+                if (overwrite !== 'Continue') {
+                    return;
+                }
+            } else {
+                try {
+                    fs.mkdirSync(projectPath, { recursive: true });
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : 'Unknown error';
+                    vscode.window.showErrorMessage(`Failed to create project directory: ${message}`);
+                    return;
+                }
+            }
+
+            try {
+                // Get template directory path
+                const templatePath = path.join(context.extensionPath, 'resources', 'cmake_template');
+                
+                // Check if template directory exists
+                if (!fs.existsSync(templatePath)) {
+                    vscode.window.showErrorMessage(`Template directory not found at ${templatePath}`);
+                    return;
+                }
+
+                // Prepare replacements for placeholders
+                const replacements: Record<string, string> = {
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    PROJECT_NAME: projectName
+                };
+
+                // Copy all template files to project directory
+                copyDirectoryRecursive(templatePath, projectPath, replacements);
+
+                // Open the project in VS Code
+                const openFolder = await vscode.window.showInformationMessage(
+                    `CMake template project '${projectName}' created successfully at ${projectPath}`,
+                    'Open Folder',
+                    'Close'
+                );
+
+                if (openFolder === 'Open Folder') {
+                    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(projectPath), false);
+                }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                vscode.window.showErrorMessage(`Failed to create template project: ${message}`);
+            }
+        }
+    );
+
     context.subscriptions.push(
         formattingDisposable,
         rangeFormattingDisposable,
         formatCommand,
-        createConfigCommand
+        createConfigCommand,
+        createTemplateProjectCommand
     );
 
     // Log activation
