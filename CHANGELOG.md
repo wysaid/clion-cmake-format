@@ -1,9 +1,63 @@
 # Changelog
 
-All notable changes to the CLion CMake Formatter extension will be documented in this file.
+All notable changes to the CLion CMake Format extension will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.2] - 2025-12-16
+
+### Changed
+
+- **Extension name consistency** — Standardized to "CLion CMake Format" (not "Formatter") across all documentation and code
+- **README restructuring** — Moved development content to dedicated `CONTRIBUTING.md` (English + Chinese)
+- **Enhanced marketplace presentation** — Improved "Why This Extension?" section with clear value propositions
+- **SEO optimization** — Refined keywords from 26 to 21 (more focused, removed redundant terms)
+- **Zero-dependency messaging** — Emphasized "no Python, no external tools required" upfront in descriptions
+
+### Added
+
+- **Contributing guides** — New `CONTRIBUTING.md` and `CONTRIBUTING.zh-CN.md` with development setup, testing guidelines, and PR process
+- **Complete configuration template** — Sample `.cc-format.jsonc` with all 22 options for easy project setup
+- **Downloads badge** — Added VS Code Marketplace downloads badge to README
+- **Team-recommended settings** — Example configuration for teams in README
+- **Tips & Best Practices** — New section explaining formatting behavior and differences from CLion
+
+### Fixed
+
+- **Configuration count** — Updated documentation to correctly state 22 configuration options (was incorrectly 21 in some places)
+- **Corrupted emoji characters** — Fixed broken emoji in README headings (Quick Start, Additional Resources, Full Configuration Reference)
+- **Markdown formatting** — Converted bold emphasis to proper headings (MD036), removed blank lines inside blockquotes (MD028)
+- **Schema validation** — Aligned `maxBlankLines` maximum (10→20) and `continuationIndentSize` minimum (0→1) with actual validation logic
+
+### Documentation
+
+- **English README** — Complete restructure with better organization and marketplace focus
+- **Chinese README** — Synchronized with English version, maintaining consistency
+- **Package descriptions** — Updated `package.nls.json` and `package.nls.zh-cn.json` with zero-dependency emphasis
+- **Keywords optimization** — Added valuable terms: `cmake-format`, `gersemi`, `zero dependencies`, `code quality`, `auto-format`
+
+## [1.2.1] - 2025-12-14
+
+### Fixed
+
+- **CRLF line ending handling** — Fixed issue where files with CRLF line endings (Windows) would always show as needing formatting even when already well-formatted
+- **Extension comparison logic** — Now normalizes line endings before comparing original and formatted content
+- **Parser line ending normalization** — Fixed parser methods to convert CRLF to LF in multi-line arguments (quoted strings, bracket arguments, nested parentheses, bracket comments)
+- **Cross-platform formatting consistency** — Formatter now always outputs LF line endings (Unix standard) regardless of input, ensuring consistent behavior across platforms
+
+### Added
+
+- **CRLF tests** — Added 29 comprehensive test cases for CRLF line ending handling (Windows platform only)
+- **Line ending normalization tests** — Verifies correct handling of both LF and CRLF inputs
+
+## [1.2.0] - 2025-12-13
+
+- New logo.
+
+## [1.1.0] - 2025-12-13
+
+- Show tips when formatting files.
 
 ## [1.0.1] - 2025-12-13
 

@@ -1,0 +1,218 @@
+# Contributing to CLion CMake Format
+
+Thank you for your interest in contributing! This document provides guidelines for development, testing, and contributing to the project.
+
+[中文版本](CONTRIBUTING.zh-CN.md)
+
+## 🛠️ Development Setup
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Getting Started
+
+```bash
+git clone https://github.com/wysaid/clion-cmake-format.git
+cd clion-cmake-format
+npm install
+npm run compile
+npm run test:unit
+```
+
+## 📜 Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run compile` | Compile TypeScript to JavaScript |
+| `npm run watch` | Watch mode compilation (auto-recompile on changes) |
+| `npm run lint` | Run ESLint to check code quality |
+| `npm run test:unit` | Run all unit tests (must pass before commit) |
+| `npm run package` | Package extension as `.vsix` file |
+
+## 📂 Project Structure
+
+```
+clion-cmake-format/
+├── src/
+│   ├── parser.ts      # CMake tokenizer and AST builder
+│   ├── formatter.ts   # Formatting logic and rules
+│   ├── config.ts      # Configuration file loader and validator
+│   └── extension.ts   # VS Code extension integration
+├── test/
+│   ├── parser.test.ts      # Parser unit tests
+│   ├── formatter.test.ts   # Formatter unit tests
+│   ├── config.test.ts      # Config unit tests
+│   ├── well-formated.test.ts  # Idempotency tests
+│   └── datasets/           # Test fixtures
+│       ├── basic/          # Basic syntax tests
+│       ├── cmake-official/ # CMake repository samples (20 files, 6302 lines)
+│       ├── edge-cases/     # Edge case tests
+│       ├── formatting/     # Formatting feature tests
+│       ├── parsing/        # Parser tests
+│       ├── real-world/     # Real-world examples
+│       └── well-formatted/ # Idempotency validation
+├── resources/
+│   ├── cc-format.schema.json  # JSON Schema for config validation
+│   ├── sample-input.cmake     # Sample input file
+│   └── sample.cc-format.jsonc # Sample config file
+└── docs/
+    ├── CONFIGURATION_VALIDATION.md  # Config validation details
+    ├── CREATE_CONFIG_COMMAND.md     # Config file creation command
+    ├── EXTENDING_TESTS.md           # How to add test cases
+    ├── FORMATTING_TIPS.md           # Formatting behavior tips
+    └── TEST_EXPANSION_SUMMARY.md    # Test suite expansion history
+```
+
+## 🐛 Debugging
+
+### Debug in VS Code
+
+1. Open this project in VS Code
+2. Press `F5` or go to **Run and Debug** panel
+3. Select **Launch Extension**
+4. A new VS Code window (Extension Development Host) will open with the extension loaded
+5. Set breakpoints in the source code as needed
+
+### Debug Configuration
+
+The project includes a `.vscode/launch.json` configuration:
+- **Extension**: Launches the extension in debug mode
+- **Extension Tests**: Runs tests in debug mode
+
+## ✅ Testing Guidelines
+
+### Before Committing
+
+Always run these commands before committing:
+
+```bash
+npm run lint      # Check code quality
+npm run test:unit # Run all tests
+```
+
+All tests must pass (100% pass rate required).
+
+### Adding Test Cases
+
+When fixing bugs or adding features, you should:
+
+1. **Add a test case** that reproduces the bug or validates the new feature
+2. Place test files in the appropriate `test/datasets/` subdirectory:
+   - `basic/` — Basic CMake syntax
+   - `edge-cases/` — Edge cases (empty files, blank lines, etc.)
+   - `formatting/` — Formatting-specific tests
+   - `parsing/` — Parser-specific tests
+   - `real-world/` — Real-world examples
+
+See [docs/EXTENDING_TESTS.md](docs/EXTENDING_TESTS.md) for detailed instructions.
+
+### Idempotency Testing
+
+The formatter must be **idempotent** — formatting twice should produce the same result:
+
+```
+Original → Format → Output1
+Output1  → Format → Output2
+Output2 === Output1  ✅
+```
+
+Test files in `test/datasets/well-formatted/default/` are validated for idempotency.
+
+## 📝 Code Guidelines
+
+### General Rules
+
+- **Use English** for all code comments and commit messages
+- **Use English** for all `.md` files in the `docs/` directory
+- Follow **TypeScript** best practices
+- Keep functions **focused and testable**
+- Add **JSDoc comments** for public APIs
+
+### Commit Message Format
+
+Use clear, concise commit messages in English:
+
+```
+✅ Good:
+- Fix: Handle empty command arguments correctly
+- Add: Support for CMAKE_MINIMUM_REQUIRED command
+- Docs: Update configuration reference
+
+❌ Bad:
+- fix bug
+- update
+- 修复了一个问题
+```
+
+### Code Style
+
+Follow the existing code style:
+- **Indentation**: 4 spaces
+- **Quotes**: Prefer single quotes
+- **Semicolons**: Required
+- **Line Length**: ~120 characters (soft limit)
+
+Run `npm run lint` to check for style violations.
+
+## 🧪 Test Development
+
+### Test Structure
+
+Tests are organized by category:
+
+```typescript
+describe('Parser', () => {
+    it('should parse simple command', () => {
+        // Test code
+    });
+});
+```
+
+### Running Specific Tests
+
+```bash
+# Run all tests
+npm run test:unit
+
+# Run specific test file (with ts-node)
+npx mocha --require ts-node/register test/parser.test.ts
+```
+
+## 📋 Pull Request Guidelines
+
+1. **Fork the repository** and create a feature branch
+2. **Add tests** for your changes
+3. **Ensure all tests pass**: `npm run test:unit`
+4. **Ensure code quality**: `npm run lint`
+5. **Write a clear PR description** explaining:
+   - What problem does it solve?
+   - What are the changes?
+   - Are there breaking changes?
+6. **Keep PRs focused** — one feature or fix per PR
+
+## 🔧 Formatting Idempotency Constraints
+
+When modifying the formatter, ensure:
+
+- ✅ **Second format matches first**: `format(format(input)) === format(input)`
+- ✅ **Samples in `well-formatted/` remain unchanged** after formatting
+- ✅ **Preserve necessary spaces and comments**
+- ✅ **Multi-line formats are stable**
+- ✅ **Evaluate backward compatibility** when adding new config keys
+- ✅ **Command case style** matches existing test data
+
+## 📚 Additional Documentation
+
+- [Configuration Validation](docs/CONFIGURATION_VALIDATION.md)
+- [Create Config Command](docs/CREATE_CONFIG_COMMAND.md)
+- [Extending Tests](docs/EXTENDING_TESTS.md)
+- [Formatting Tips](docs/FORMATTING_TIPS.md)
+
+## 🙏 Questions?
+
+- Open an [issue](https://github.com/wysaid/clion-cmake-format/issues) for bugs
+- Start a [discussion](https://github.com/wysaid/clion-cmake-format/discussions) for questions
+
+Thank you for contributing! 🎉

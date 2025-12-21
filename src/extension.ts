@@ -1,5 +1,5 @@
 /**
- * VSCode Extension - CLion CMake Formatter (cc-format)
+ * VSCode Extension - CLion CMake Format (cc-format)
  *
  * Provides document formatting for CMake files using CLion's formatting style.
  * Supports project-level configuration via .cc-format.jsonc files.
@@ -198,6 +198,30 @@ function findGitRoot(startPath: string): string | null {
 }
 
 /**
+ * Normalize line endings to LF for comparison
+ */
+function normalizeLineEndings(text: string): string {
+    return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+/**
+ * Show formatting result message
+ */
+function showFormattingResult(original: string, formatted: string): void {
+    // Normalize line endings before comparison to handle CRLF vs LF
+    const normalizedOriginal = normalizeLineEndings(original);
+    const normalizedFormatted = normalizeLineEndings(formatted);
+
+    if (normalizedOriginal === normalizedFormatted) {
+        const message = vscode.l10n.t('No changes: content is already well-formatted');
+        vscode.window.setStatusBarMessage(message, 3000);
+    } else {
+        const message = vscode.l10n.t('File formatted successfully');
+        vscode.window.setStatusBarMessage(message, 3000);
+    }
+}
+
+/**
  * Document Formatting Provider for CMake files
  */
 class CMakeFormattingProvider implements vscode.DocumentFormattingEditProvider {
@@ -210,6 +234,9 @@ class CMakeFormattingProvider implements vscode.DocumentFormattingEditProvider {
             const source = document.getText();
             const options = getFormatterOptions(document);
             const formatted = formatCMake(source, options);
+
+            // Show formatting result (non-blocking)
+            showFormattingResult(source, formatted);
 
             // Create a text edit that replaces the entire document
             const fullRange = new vscode.Range(
@@ -242,6 +269,9 @@ class CMakeRangeFormattingProvider implements vscode.DocumentRangeFormattingEdit
             const source = document.getText();
             const options = getFormatterOptions(document);
             const formatted = formatCMake(source, options);
+
+            // Show formatting result (non-blocking)
+            showFormattingResult(source, formatted);
 
             // Create a text edit that replaces the entire document
             const fullRange = new vscode.Range(
@@ -375,7 +405,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     // Log activation
-    console.log('CLion CMake Formatter extension is now active');
+    console.log('CLion CMake Format extension is now active');
 }
 
 /**
