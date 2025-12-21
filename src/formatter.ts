@@ -481,7 +481,23 @@ export class CMakeFormatter {
             } else if (isFirstGroup) {
                 // Opening paren on its own, first group is continuation
                 lines.push(`${indent}${name}${spaceBeforeParen}(`);
-                line = `${continuationIndent}${formattedArgs}`;
+                // For unquoted arguments with newlines (nested parens), check if all subsequent lines start with '('
+                // If yes, use command indent; otherwise use continuation indent (CMake official style)
+                if (formattedArgs.includes('\n') && group.every(arg => !arg.quoted && !arg.bracket)) {
+                    const argLines = formattedArgs.split('\n');
+                    // Check if all lines (after first) start with '(' after trimming
+                    const allLinesStartWithParen = argLines.slice(1).every(l => l.trimStart().startsWith('('));
+                    if (allLinesStartWithParen) {
+                        // All lines use the same indent as the command itself
+                        line = argLines.map((argLine) => {
+                            return `${indent}${argLine.trimStart()}`;
+                        }).join('\n');
+                    } else {
+                        line = `${continuationIndent}${formattedArgs}`;
+                    }
+                } else {
+                    line = `${continuationIndent}${formattedArgs}`;
+                }
             } else {
                 line = `${continuationIndent}${formattedArgs}`;
             }

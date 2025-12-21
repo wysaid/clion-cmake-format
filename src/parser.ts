@@ -279,7 +279,8 @@ export class CMakeTokenizer {
         }
 
         // Handle unquoted arguments (includes commands)
-        if (this.isUnquotedArgumentChar(this.peek())) {
+        // Note: backslash can start an escape sequence in unquoted arguments
+        if (this.isUnquotedArgumentChar(this.peek()) || (this.peek() === '\\' && this.peek(1) !== '')) {
             return this.readUnquotedArgument(startLine, startColumn);
         }
 
@@ -751,6 +752,7 @@ export class CMakeParser {
      */
     private parseNestedParentheses(blankLinesBefore: number): ArgumentInfo {
         const startLine = this.peek().line;
+        let endLine = startLine;
         let value = '';
         let parenDepth = 0;
 
@@ -761,10 +763,12 @@ export class CMakeParser {
             if (token.type === TokenType.LeftParen) {
                 parenDepth++;
                 value += '(';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.RightParen) {
                 parenDepth--;
                 value += ')';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
                 if (parenDepth === 0) {
                     // We've closed all nested parentheses
@@ -775,18 +779,23 @@ export class CMakeParser {
                 this.advance();
             } else if (token.type === TokenType.Newline) {
                 value += '\n';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.Argument) {
                 value += token.value;
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.QuotedArgument) {
                 value += '"' + token.value + '"';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.BracketArgument) {
                 value += token.value;
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.Comment || token.type === TokenType.BracketComment) {
                 value += token.value;
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else {
                 // Unknown token, skip it
@@ -802,6 +811,7 @@ export class CMakeParser {
             quoted: false,
             bracket: false,
             line: startLine,
+            endLine: endLine,
             blankLinesBefore: blankLinesBefore > 0 ? blankLinesBefore - 1 : 0
         };
     }
