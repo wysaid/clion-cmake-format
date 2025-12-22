@@ -13,10 +13,10 @@ endfunction()
 
 
 foo_function0(
-    "arg1"
-    "arg2")
+        "arg1"
+        "arg2")
 
 foo_function1(
-    "arg1"
-    "arg2"
+        "arg1"
+        "arg2"
 )

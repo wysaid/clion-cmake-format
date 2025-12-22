@@ -5,6 +5,42 @@ All notable changes to the CLion CMake Format extension will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-22
+
+### ⚠️ Breaking Changes
+
+- **Default `continuationIndentSize` changed from 4 to 8** — Aligns with CLion's default behavior and CMake community conventions. **Migration**: If you prefer the previous default, explicitly set `"continuationIndentSize": 4` in your `.cc-format.jsonc` configuration file.
+
+### Added
+
+- **CLion integration testing** — Complete test suite comparing plugin output against CLion's native formatter
+- **CMake official idempotency tests** — Validates formatting stability on 20+ real-world CMake files from the official repository
+- **Validation script** (`scripts/validate-with-clion.js`) — Batch-validates test datasets against CLion formatting standards
+- **Validator module** (`src/validator.ts`) — Programmatic CMake file validation with directory traversal support
+- **New VS Code tasks** — `test:integration`, `test:all`, and `test:clion` for comprehensive testing workflows
+- **Enhanced test datasets** — 2,600+ lines of well-formatted test data matching CLion behavior
+- **New edge case test** (`many-blank-lines.cmake`) — Tests `maxBlankLines` enforcement
+
+### Changed
+
+- **Test organization** — Separated integration tests (requiring CLion) from unit tests for better CI/CD flexibility
+- **ESLint configuration** — Restructured to explicit schema with `extends`, `plugins`, `rules`, and `ignorePatterns` arrays
+- **CMake official idempotency testing** — Integrated into Mocha test suite (removed standalone script)
+
+### Fixed
+
+- **Nested parentheses indentation** — Lines starting with `(` now use command indent; lines starting with `AND`, `OR`, etc. use continuation indent (matches CLion)
+- **Inline comment alignment** — Preserves original spacing before inline comments to maintain alignment in comment blocks
+- **Empty file handling** — Empty files return empty string (not `\n`); whitespace-only files preserve trailing blank lines
+- **`maxBlankLines` enforcement** — Now properly limits consecutive blank lines within code blocks
+- **Config resolution** — Uses `fs.realpathSync` for symlink-aware workspace root resolution
+
+### Documentation
+
+- **New guide** — `docs/CLION_INTEGRATION_TESTING.md` with setup instructions, usage examples, and troubleshooting
+- **Updated contributing guides** — Added CLion testing section and clarified idempotency requirements
+- **README improvements** — Fixed formatting tips reference and improved test command descriptions
+
 ## [1.2.2] - 2025-12-16
 
 ### Changed

@@ -29,6 +29,8 @@ npm run test:unit
 | `npm run watch` | 监听模式编译（自动重新编译） |
 | `npm run lint` | 运行 ESLint 检查代码质量 |
 | `npm run test:unit` | 运行所有单元测试（提交前必须通过） |
+| `npm run test:clion` | 与 CLion 对比格式化（需要安装 CLion） |
+| `npm run test:cmake-official` | 在 CMake 官方文件上测试幂等性 |
 | `npm run package` | 打包扩展为 `.vsix` 文件 |
 
 ## 📂 项目结构
@@ -120,6 +122,17 @@ npm run test:unit # 运行所有测试
 
 `test/datasets/well-formatted/default/` 中的测试文件会进行幂等性验证。
 
+### CLion 对比测试
+
+为确保与 CLion 原生格式化器的兼容性，您可以运行对比测试：
+
+```bash
+# 需要安装 CLion
+npm run test:clion
+```
+
+此测试使用 CLion 和本插件分别格式化文件，然后比较结果。详情请参阅 [docs/CLION_INTEGRATION_TESTING.md](docs/CLION_INTEGRATION_TESTING.md)（英文）。
+
 ## 📝 代码指南
 
 ### 通用规则
@@ -205,6 +218,7 @@ npx mocha --require ts-node/register test/parser.test.ts
 
 ## 📚 其他文档
 
+- [CLion 集成测试](docs/CLION_INTEGRATION_TESTING.md)（英文）
 - [配置验证](docs/CONFIGURATION_VALIDATION.md)（英文）
 - [创建配置命令](docs/CREATE_CONFIG_COMMAND.md)（英文）
 - [扩展测试](docs/EXTENDING_TESTS.md)（英文）

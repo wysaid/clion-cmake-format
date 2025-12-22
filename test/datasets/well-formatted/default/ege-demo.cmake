@@ -94,17 +94,17 @@ if (MSVC)
     endif ()
 
     target_compile_options(${MY_TARGET_NAME} PRIVATE
-        /source-charset:utf-8
-        /MP
-        /D__STDC_LIMIT_MACROS
-        /D_USE_MATH_DEFINES
-        /Zc:__cplusplus
-        ${CPP_COMPILE_OPTIONS}
-        "$<$<CONFIG:DEBUG>:/DDEBUG>"
-        "$<$<CONFIG:RELEASE>:/DNDEBUG>"
-        "$<$<CONFIG:RELWITHDEBINFO>:/DNDEBUG>"
-        "$<$<CONFIG:MINSIZEREL>:/DNDEBUG>"
-        "$<IF:$<CONFIG:Debug>,/MDd,/MD>")
+            /source-charset:utf-8
+            /MP
+            /D__STDC_LIMIT_MACROS
+            /D_USE_MATH_DEFINES
+            /Zc:__cplusplus
+            ${CPP_COMPILE_OPTIONS}
+            "$<$<CONFIG:DEBUG>:/DDEBUG>"
+            "$<$<CONFIG:RELEASE>:/DNDEBUG>"
+            "$<$<CONFIG:RELWITHDEBINFO>:/DNDEBUG>"
+            "$<$<CONFIG:MINSIZEREL>:/DNDEBUG>"
+            "$<IF:$<CONFIG:Debug>,/MDd,/MD>")
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")

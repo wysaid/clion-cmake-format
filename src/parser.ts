@@ -81,6 +81,8 @@ export interface ArgumentInfo {
     inlineComment?: string;
     /** Line number of the inline comment */
     inlineCommentLine?: number;
+    /** Number of spaces before the inline comment (for alignment preservation) */
+    inlineCommentSpaces?: number;
     /** Line number of this argument (start line for multi-line arguments) */
     line?: number;
     /** End line number of this argument (for multi-line arguments like quoted strings) */
@@ -279,7 +281,8 @@ export class CMakeTokenizer {
         }
 
         // Handle unquoted arguments (includes commands)
-        if (this.isUnquotedArgumentChar(this.peek())) {
+        // Note: backslash can start an escape sequence in unquoted arguments
+        if (this.isUnquotedArgumentChar(this.peek()) || (this.peek() === '\\' && this.peek(1) !== '')) {
             return this.readUnquotedArgument(startLine, startColumn);
         }
 
@@ -666,17 +669,20 @@ export class CMakeParser {
     private parseArguments(): ArgumentInfo[] {
         const args: ArgumentInfo[] = [];
         let consecutiveNewlines = 0;
+        let lastWhitespaceLength = 0;
 
         while (!this.isAtEnd() && this.peek().type !== TokenType.RightParen) {
             const token = this.peek();
 
             if (token.type === TokenType.Whitespace) {
+                lastWhitespaceLength = token.value.length;
                 this.advance();
                 continue;
             }
 
             if (token.type === TokenType.Newline) {
                 consecutiveNewlines++;
+                lastWhitespaceLength = 0; // Reset whitespace after newline
                 this.advance();
                 continue;
             }
@@ -686,12 +692,14 @@ export class CMakeParser {
                 if (args.length > 0 && !args[args.length - 1].inlineComment) {
                     args[args.length - 1].inlineComment = token.value;
                     args[args.length - 1].inlineCommentLine = token.line;
+                    args[args.length - 1].inlineCommentSpaces = lastWhitespaceLength;
                     // If there were blank lines before the comment, record them
                     if (consecutiveNewlines > 0) {
                         args[args.length - 1].blankLinesBefore = Math.max(args[args.length - 1].blankLinesBefore || 0, consecutiveNewlines - 1);
                     }
                 }
                 consecutiveNewlines = 0;  // Reset after comment
+                lastWhitespaceLength = 0; // Reset after comment
                 this.advance();
                 continue;
             }
@@ -751,6 +759,7 @@ export class CMakeParser {
      */
     private parseNestedParentheses(blankLinesBefore: number): ArgumentInfo {
         const startLine = this.peek().line;
+        let endLine = startLine;
         let value = '';
         let parenDepth = 0;
 
@@ -761,10 +770,12 @@ export class CMakeParser {
             if (token.type === TokenType.LeftParen) {
                 parenDepth++;
                 value += '(';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.RightParen) {
                 parenDepth--;
                 value += ')';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
                 if (parenDepth === 0) {
                     // We've closed all nested parentheses
@@ -775,18 +786,23 @@ export class CMakeParser {
                 this.advance();
             } else if (token.type === TokenType.Newline) {
                 value += '\n';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.Argument) {
                 value += token.value;
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.QuotedArgument) {
                 value += '"' + token.value + '"';
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.BracketArgument) {
                 value += token.value;
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else if (token.type === TokenType.Comment || token.type === TokenType.BracketComment) {
                 value += token.value;
+                endLine = token.endLine !== undefined ? token.endLine : token.line;
                 this.advance();
             } else {
                 // Unknown token, skip it
@@ -802,6 +818,7 @@ export class CMakeParser {
             quoted: false,
             bracket: false,
             line: startLine,
+            endLine: endLine,
             blankLinesBefore: blankLinesBefore > 0 ? blankLinesBefore - 1 : 0
         };
     }

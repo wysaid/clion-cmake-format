@@ -9,9 +9,9 @@ if (NOT nproc EQUAL 0)
 endif ()
 message(STATUS "running bootstrap: ${bootstrap} ${ninja_arg} ${parallel_arg}")
 execute_process(
-    COMMAND ${bootstrap} ${ninja_arg} ${parallel_arg}
-    WORKING_DIRECTORY "${bin_dir}"
-    RESULT_VARIABLE result
+        COMMAND ${bootstrap} ${ninja_arg} ${parallel_arg}
+        WORKING_DIRECTORY "${bin_dir}"
+        RESULT_VARIABLE result
 )
 if (result)
     message(FATAL_ERROR "bootstrap failed: ${result}")

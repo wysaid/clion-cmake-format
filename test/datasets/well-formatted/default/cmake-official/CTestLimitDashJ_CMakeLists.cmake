@@ -16,16 +16,16 @@ endif ()
 include(CTest)
 
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CreateSleepDelete.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/CreateSleepDelete.cmake
-    @ONLY
+        ${CMAKE_CURRENT_SOURCE_DIR}/CreateSleepDelete.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/CreateSleepDelete.cmake
+        @ONLY
 )
 
 foreach (n RANGE 1 100)
     add_test(NAME t${n}
-        COMMAND ${CMAKE_CTEST_COMMAND}
-        -D basefilename=f${n}
-        -S ${CMAKE_CURRENT_BINARY_DIR}/CreateSleepDelete.cmake
+            COMMAND ${CMAKE_CTEST_COMMAND}
+            -D basefilename=f${n}
+            -S ${CMAKE_CURRENT_BINARY_DIR}/CreateSleepDelete.cmake
     )
     set_property(TEST t${n} PROPERTY FAIL_REGULAR_EXPRESSION "(c='[5-9]'|c='[1-9][0-9]+')")
 endforeach ()

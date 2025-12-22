@@ -2,7 +2,7 @@
     "name": "clion-cmake-format",
     "displayName": "%displayName%",
     "description": "%description%",
-    "version": "1.2.2",
+    "version": "1.3.0",
     "publisher": "wysaid",
     "license": "MIT",
     "icon": "logo.png",
@@ -98,7 +98,7 @@
                 },
                 "clionCMakeFormatter.continuationIndentSize": {
                     "type": "number",
-                    "default": 4,
+                    "default": 8,
                     "minimum": 1,
                     "maximum": 16,
                     "description": "%config.continuationIndentSize.description%",
@@ -235,7 +235,10 @@
         "lint": "eslint src --ext ts",
         "pretest": "npm run compile && npm run lint",
         "test": "npm run test:unit",
-        "test:unit": "mocha --require ts-node/register 'test/**/*.test.ts'",
+        "test:unit": "mocha --require ts-node/register 'test/**/*.test.ts' --exclude 'test/integration/**'",
+        "test:integration": "mocha --require ts-node/register 'test/integration/**/*.test.ts'",
+        "test:all": "mocha --require ts-node/register 'test/**/*.test.ts'",
+        "test:clion": "node scripts/validate-with-clion.js",
         "package": "vsce package"
     },
     "devDependencies": {

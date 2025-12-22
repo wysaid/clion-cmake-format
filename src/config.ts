@@ -335,7 +335,8 @@ export function findConfigFile(documentPath: string, workspaceRoot?: string): st
                     const resolvedPath = fs.realpathSync(configPath);
                     // Verify the resolved path is still within the workspace boundaries
                     if (workspaceRoot) {
-                        const rootNormalized = path.resolve(root);
+                        // Also resolve workspace root to handle symlinks (e.g., /var -> /private/var on macOS)
+                        const rootNormalized = fs.realpathSync(root);
                         if (!resolvedPath.startsWith(rootNormalized + path.sep) && resolvedPath !== rootNormalized) {
                             // Config file resolves to outside workspace - skip it
                             continue;

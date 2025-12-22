@@ -2,7 +2,7 @@
 # helper function for test validation
 function(CHECK query result expression)
     cmake_language(EVAL CODE
-        "if (NOT (${expression}))
+            "if (NOT (${expression}))
        message(SEND_ERROR \"wrong value for query '${query}': '${result}'\")
      endif()")
 endfunction()
