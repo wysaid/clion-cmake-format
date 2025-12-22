@@ -150,12 +150,5 @@ npm run compile
 npm run lint
 npm run test:unit         # Unit tests (no CLion needed)
 npm run test:integration  # Plugin vs CLion comparison (requires CLion)
-npm run test:clion       # Validate datasets with CLion (requires CLion)equires CLion installation. For local development:
-
-```bash
-# Full test cycle
-npm run compile
-npm run lint
-npm run test:unit
-node scripts/test-clion-compare.js  # Requires CLion
+npm run test:clion       # Validate datasets with CLion (requires CLion)
 ```

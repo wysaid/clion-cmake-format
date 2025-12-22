@@ -56,12 +56,24 @@ const options = {
 for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
         case '--clion-path':
+            if (i + 1 >= args.length || args[i + 1].startsWith('-')) {
+                console.error('Error: --clion-path requires a value');
+                process.exit(1);
+            }
             options.clionPath = args[++i];
             break;
         case '--test-dir':
+            if (i + 1 >= args.length || args[i + 1].startsWith('-')) {
+                console.error('Error: --test-dir requires a value');
+                process.exit(1);
+            }
             options.testDir = args[++i];
             break;
         case '--file':
+            if (i + 1 >= args.length || args[i + 1].startsWith('-')) {
+                console.error('Error: --file requires a value');
+                process.exit(1);
+            }
             options.file = args[++i];
             break;
         case '--restore':
@@ -112,10 +124,10 @@ Examples:
   node scripts/validate-with-clion.js --test-dir test/datasets/basic
 
   # Restore files after validation
-  node scripts/validate-with-file formatting for better performance and only formats
-      CMake files (*.cmake and CMakeLists.txt), ignoring other file types like .jsonc or .md
-Note: This script uses batch directory formatting (-R flag) for much better performance
-      compared to formatting files individually.
+  node scripts/validate-with-clion.js --restore
+
+Note: This script uses batch file formatting for better performance and only formats
+      CMake files (*.cmake and CMakeLists.txt), ignoring other file types like .jsonc or .md.
 `);
     process.exit(0);
 }
@@ -236,9 +248,22 @@ function formatCMakeFilesWithClion(clionPath, files) {
         }
 
         // CLion may return non-zero exit codes (e.g., 14) even on successful formatting
-        // Check if there's actual error output
-        if (result.status !== 0 && result.stderr && result.stderr.includes('Error')) {
-            return { success: false, error: result.stderr };
+        // Check stderr for actual error indicators more robustly
+        if (result.status !== 0 && result.stderr) {
+            // Look for common error patterns (case-insensitive)
+            const stderr = result.stderr.toLowerCase();
+            const errorPatterns = [
+                'error:', 
+                'exception:', 
+                'failed to', 
+                'cannot find',
+                'no such file'
+            ];
+            const hasError = errorPatterns.some(pattern => stderr.includes(pattern));
+            
+            if (hasError) {
+                return { success: false, error: result.stderr };
+            }
         }
 
         return { success: true };
@@ -256,6 +281,14 @@ function checkGitDiff(filePath) {
             encoding: 'utf-8',
             stdio: ['pipe', 'pipe', 'pipe']
         });
+
+        if (result.error) {
+            return { changed: false, error: result.error.message };
+        }
+
+        if (result.status !== 0) {
+            return { changed: false, error: `git diff exited with code ${result.status}: ${result.stderr}` };
+        }
 
         const diff = result.stdout.trim();
         return {
@@ -389,9 +422,16 @@ console.log(`📍 CLion path: ${clionPath}`);
 
 // Check git is available
 try {
-    spawnSync('git', ['--version'], { encoding: 'utf-8' });
+    const result = spawnSync('git', ['--version'], { encoding: 'utf-8' });
+    if (result.error) {
+        throw new Error('Git command not found');
+    }
+    if (result.status !== 0) {
+        throw new Error(`Git check failed with exit code ${result.status}`);
+    }
 } catch (e) {
     console.error('❌ Git is not available. This test requires git.');
+    console.error(`   Error: ${e.message}`);
     process.exit(1);
 }
 
@@ -467,6 +507,19 @@ for (let i = 0; i < testFiles.length; i++) {
 
     // Check git diff
     const diffResult = checkGitDiff(testFile);
+
+    if (diffResult.error) {
+        console.log('⚠️  ERROR');
+        results.errors.push({
+            file: relativePath,
+            fullPath: testFile,
+            error: diffResult.error
+        });
+        if (options.verbose) {
+            console.log(`   Error: ${diffResult.error}`);
+        }
+        continue;
+    }
 
     if (diffResult.changed) {
         console.log('❌ DIFFER');

@@ -203,6 +203,8 @@ Create `.cc-format.jsonc` in your project root:
 
 ## 📖 Full Configuration Reference
 
+> **⚠️ Note**: Version 1.3.0+ changed the default `continuationIndentSize` from 4 to 8 to match CLion's default. If you prefer the previous default, add `"continuationIndentSize": 4` to your `.cc-format.jsonc` file.
+
 ### Tab and Indentation
 
 | Setting | Type | Default | Description |
@@ -210,7 +212,7 @@ Create `.cc-format.jsonc` in your project root:
 | `useTabs` | boolean | `false` | Use tabs instead of spaces |
 | `tabSize` | number | `4` | Spaces per tab (1-16) |
 | `indentSize` | number | `4` | Spaces per indent level (1-16) |
-| `continuationIndentSize` | number | `8` | Continuation line indent (1-16) |
+| `continuationIndentSize` | number | `8` | Continuation line indent (1-16) ⚠️ _Changed from 4 in v1.3.0_ |
 | `keepIndentOnEmptyLines` | boolean | `false` | Preserve indent on empty lines |
 
 ### Spacing Before Parentheses
