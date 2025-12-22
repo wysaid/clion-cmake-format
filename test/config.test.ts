@@ -230,7 +230,7 @@ describe('Configuration File Support', () => {
             const documentPath = path.join(tempDir, 'CMakeLists.txt');
             const found = findConfigFile(documentPath);
 
-            assert.strictEqual(found, configPath);
+            assert.strictEqual(found, fs.realpathSync(configPath));
         });
 
         it('should find .cc-format in current directory', () => {
@@ -240,7 +240,7 @@ describe('Configuration File Support', () => {
             const documentPath = path.join(tempDir, 'CMakeLists.txt');
             const found = findConfigFile(documentPath);
 
-            assert.strictEqual(found, configPath);
+            assert.strictEqual(found, fs.realpathSync(configPath));
         });
 
         it('should prefer .cc-format.jsonc over .cc-format', () => {
@@ -252,7 +252,7 @@ describe('Configuration File Support', () => {
             const documentPath = path.join(tempDir, 'CMakeLists.txt');
             const found = findConfigFile(documentPath);
 
-            assert.strictEqual(found, configJsonc);
+            assert.strictEqual(found, fs.realpathSync(configJsonc));
         });
 
         it('should find config in parent directory', () => {
@@ -265,7 +265,7 @@ describe('Configuration File Support', () => {
             const documentPath = path.join(subDir, 'CMakeLists.txt');
             const found = findConfigFile(documentPath);
 
-            assert.strictEqual(found, configPath);
+            assert.strictEqual(found, fs.realpathSync(configPath));
         });
 
         it('should find config in ancestor directory', () => {
@@ -282,7 +282,7 @@ describe('Configuration File Support', () => {
             const documentPath = path.join(level3, 'CMakeLists.txt');
             const found = findConfigFile(documentPath);
 
-            assert.strictEqual(found, configPath);
+            assert.strictEqual(found, fs.realpathSync(configPath));
         });
 
         it('should return null when no config found', () => {
@@ -399,7 +399,7 @@ describe('Configuration File Support', () => {
 
         it('should merge config file with global options', () => {
             const configPath = path.join(tempDir, '.cc-format.jsonc');
-            fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 4}`);
+            fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 8}`);
 
             const documentPath = path.join(tempDir, 'CMakeLists.txt');
             const globalOptions = { indentSize: 2, useTabs: true };
@@ -407,7 +407,7 @@ describe('Configuration File Support', () => {
             const result = getConfigForDocument(documentPath, tempDir, globalOptions);
 
             // Config file overrides global
-            assert.strictEqual(result.indentSize, 4);
+            assert.strictEqual(result.indentSize, 8);
             // Global option preserved when not in config file
             assert.strictEqual(result.useTabs, true);
         });
@@ -422,12 +422,12 @@ describe('Configuration File Support', () => {
 
             // Config in subdirectory (should take precedence)
             const subConfig = path.join(subDir, '.cc-format.jsonc');
-            fs.writeFileSync(subConfig, `// ${PROJECT_URL}\n{"indentSize": 4}`);
+            fs.writeFileSync(subConfig, `// ${PROJECT_URL}\n{"indentSize": 8}`);
 
             const documentPath = path.join(subDir, 'CMakeLists.txt');
             const result = getConfigForDocument(documentPath, tempDir, {});
 
-            assert.strictEqual(result.indentSize, 4);
+            assert.strictEqual(result.indentSize, 8);
         });
     });
 
