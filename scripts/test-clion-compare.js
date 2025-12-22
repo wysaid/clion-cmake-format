@@ -4,10 +4,10 @@
  * Compare formatting results between CLion and this plugin
  *
  * This script:
- * 1. Takes cmake test files from datasets/well-formatted/default
- * 2. Formats each file using CLion's command-line formatter
- * 3. Formats the same file using this plugin
- * 4. Compares the results and reports differences
+ * 1. Formats test files in-place using CLion's command-line formatter
+ * 2. Uses `git diff` to detect any changes
+ * 3. Reports files that differ from CLion's formatting
+ * 4. Restores files to original state after testing
  *
  * Usage:
  *   node scripts/test-clion-compare.js [options]
@@ -16,33 +16,22 @@
  *   --clion-path <path>   Path to CLion executable (auto-detected if not set)
  *   --test-dir <path>     Directory containing test files (default: test/datasets/well-formatted/default)
  *   --file <name>         Test a specific file only
+ *   --no-restore          Don't restore files after testing (keep CLion formatted version)
  *   --verbose             Show detailed diff output
- *   --keep-temp           Keep temporary files for debugging
  *   --help                Show this help message
  *
  * Environment:
  *   CLION_PATH            Path to CLion executable (alternative to --clion-path)
  *
  * Requirements:
- *   - CLion must be installed with command-line launcher configured
- *   - Run `npm run compile` first to build the formatter
+ *   - CLion must be installed
+ *   - Git must be available
  */
 
 const fs = require('fs');
 const path = require('path');
-const { execSync, spawnSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const os = require('os');
-
-// Try to load the formatter (must be compiled first)
-let formatCMake;
-try {
-    const formatterModule = require('../dist/src/formatter');
-    formatCMake = formatterModule.formatCMake;
-} catch (e) {
-    console.error('❌ Error: Could not load formatter. Please run "npm run compile" first.');
-    console.error(`   Details: ${e.message}`);
-    process.exit(1);
-}
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -50,8 +39,8 @@ const options = {
     clionPath: process.env.CLION_PATH || null,
     testDir: path.join(__dirname, '../test/datasets/well-formatted/default'),
     file: null,
+    restore: false,
     verbose: false,
-    keepTemp: false,
     help: false
 };
 
@@ -66,11 +55,11 @@ for (let i = 0; i < args.length; i++) {
         case '--file':
             options.file = args[++i];
             break;
+        case '--restore':
+            options.restore = true;
+            break;
         case '--verbose':
             options.verbose = true;
-            break;
-        case '--keep-temp':
-            options.keepTemp = true;
             break;
         case '--help':
         case '-h':
@@ -83,6 +72,9 @@ if (options.help) {
     console.log(`
 CLion vs Plugin Formatter Comparison Test
 
+This test formats files using CLion and checks for differences using git diff.
+Test files should already be correctly formatted - any change indicates a mismatch.
+
 Usage:
   node scripts/test-clion-compare.js [options]
 
@@ -91,8 +83,8 @@ Options:
   --test-dir <path>     Directory containing test files
                         (default: test/datasets/well-formatted/default)
   --file <name>         Test a specific file only
+  --restore             Restore files after testing (default: keep CLion formatted version)
   --verbose             Show detailed diff output
-  --keep-temp           Keep temporary files for debugging
   --help                Show this help message
 
 Environment:
@@ -105,13 +97,38 @@ Examples:
   # Test a specific file
   node scripts/test-clion-compare.js --file simple-command.cmake
 
-  # Use a specific CLion path
-  node scripts/test-clion-compare.js --clion-path /opt/clion/bin/clion.sh
-
-  # Verbose output with temp files kept
-  node scripts/test-clion-compare.js --verbose --keep-temp
+  # Restore files after testing
+  node scripts/test-clion-compare.js --restore --verbose
 `);
     process.exit(0);
+}
+
+/**
+ * Resolve CLion path - handles macOS .app bundles
+ */
+function resolveClionPath(inputPath) {
+    if (!inputPath) return null;
+
+    if (os.platform() === 'darwin' && inputPath.endsWith('.app')) {
+        const executablePath = path.join(inputPath, 'Contents', 'MacOS', 'clion');
+        if (fs.existsSync(executablePath)) {
+            return executablePath;
+        }
+        const macosDir = path.join(inputPath, 'Contents', 'MacOS');
+        if (fs.existsSync(macosDir)) {
+            try {
+                const files = fs.readdirSync(macosDir);
+                const clionExe = files.find(f => f.toLowerCase() === 'clion');
+                if (clionExe) {
+                    return path.join(macosDir, clionExe);
+                }
+            } catch (e) {
+                // Ignore
+            }
+        }
+    }
+
+    return inputPath;
 }
 
 /**
@@ -122,14 +139,20 @@ function detectClionPath() {
     const possiblePaths = [];
 
     if (platform === 'darwin') {
-        // macOS paths
-        possiblePaths.push(
-            '/Applications/CLion.app/Contents/MacOS/clion',
-            path.join(os.homedir(), 'Applications/CLion.app/Contents/MacOS/clion'),
-            // JetBrains Toolbox paths
-            path.join(os.homedir(), 'Library/Application Support/JetBrains/Toolbox/apps/CLion/ch-0/*/CLion.app/Contents/MacOS/clion'),
-        );
-        // Also try clion command if in PATH
+        const appLocations = [
+            '/Applications/CLion.app',
+            path.join(os.homedir(), 'Applications/CLion.app'),
+        ];
+
+        for (const appPath of appLocations) {
+            if (fs.existsSync(appPath)) {
+                const resolved = resolveClionPath(appPath);
+                if (resolved && fs.existsSync(resolved)) {
+                    possiblePaths.push(resolved);
+                }
+            }
+        }
+
         try {
             const result = spawnSync('which', ['clion'], { encoding: 'utf-8' });
             if (result.status === 0 && result.stdout.trim()) {
@@ -139,15 +162,12 @@ function detectClionPath() {
             // Ignore
         }
     } else if (platform === 'linux') {
-        // Linux paths
         possiblePaths.push(
             '/opt/clion/bin/clion.sh',
             '/usr/local/bin/clion',
             '/snap/bin/clion',
-            path.join(os.homedir(), '.local/share/JetBrains/Toolbox/apps/CLion/ch-0/*/bin/clion.sh'),
             path.join(os.homedir(), 'clion/bin/clion.sh'),
         );
-        // Also try clion command if in PATH
         try {
             const result = spawnSync('which', ['clion'], { encoding: 'utf-8' });
             if (result.status === 0 && result.stdout.trim()) {
@@ -157,46 +177,14 @@ function detectClionPath() {
             // Ignore
         }
     } else if (platform === 'win32') {
-        // Windows paths
         const programFiles = process.env['ProgramFiles'] || 'C:\\Program Files';
-        const localAppData = process.env['LOCALAPPDATA'] || path.join(os.homedir(), 'AppData', 'Local');
         possiblePaths.push(
-            path.join(programFiles, 'JetBrains', 'CLion*', 'bin', 'clion64.exe'),
-            path.join(localAppData, 'JetBrains', 'Toolbox', 'apps', 'CLion', 'ch-0', '*', 'bin', 'clion64.exe'),
+            path.join(programFiles, 'JetBrains', 'CLion', 'bin', 'clion64.exe'),
         );
     }
 
-    // Handle glob patterns
     for (const possiblePath of possiblePaths) {
-        if (possiblePath.includes('*')) {
-            // Expand glob pattern
-            try {
-                const dir = path.dirname(possiblePath);
-                const base = path.basename(possiblePath);
-                const parentDir = path.dirname(dir);
-                const parentPattern = path.basename(dir);
-
-                if (parentPattern.includes('*')) {
-                    // Parent directory has pattern
-                    const actualParent = fs.readdirSync(path.dirname(parentDir))
-                        .filter(d => {
-                            const regex = new RegExp('^' + parentPattern.replace(/\*/g, '.*') + '$');
-                            return regex.test(d);
-                        })
-                        .sort()
-                        .reverse()[0]; // Get latest version
-
-                    if (actualParent) {
-                        const expandedPath = path.join(path.dirname(parentDir), actualParent, base);
-                        if (fs.existsSync(expandedPath)) {
-                            return expandedPath;
-                        }
-                    }
-                }
-            } catch (e) {
-                // Ignore glob expansion errors
-            }
-        } else if (fs.existsSync(possiblePath)) {
+        if (fs.existsSync(possiblePath)) {
             return possiblePath;
         }
     }
@@ -205,94 +193,86 @@ function detectClionPath() {
 }
 
 /**
- * Format a file using CLion command-line formatter
- * @param {string} clionPath - Path to CLion executable
- * @param {string} inputFile - Path to input file
- * @param {string} outputFile - Path to output file
- * @returns {boolean} - True if successful
+ * Format a file using CLion command-line formatter (in-place)
  */
-function formatWithClion(clionPath, inputFile, outputFile) {
-    // Copy input to output first (CLion formats in-place)
-    fs.copyFileSync(inputFile, outputFile);
-
+function formatWithClion(clionPath, filePath) {
     try {
-        // CLion command-line format syntax:
-        // clion format -allowDefaults <file>
-        const result = spawnSync(clionPath, ['format', '-allowDefaults', outputFile], {
+        const result = spawnSync(clionPath, ['format', '-allowDefaults', filePath], {
             encoding: 'utf-8',
-            timeout: 60000, // 60 second timeout
+            timeout: 60000,
             stdio: ['pipe', 'pipe', 'pipe']
         });
 
         if (result.error) {
-            throw result.error;
+            return { success: false, error: result.error.message };
         }
 
         if (result.status !== 0) {
-            console.error(`CLion format stderr: ${result.stderr}`);
-            return false;
+            return { success: false, error: result.stderr || `Exit code: ${result.status}` };
         }
 
-        return true;
+        return { success: true };
     } catch (e) {
-        console.error(`Error running CLion: ${e.message}`);
-        return false;
+        return { success: false, error: e.message };
     }
 }
 
 /**
- * Format a file using this plugin's formatter
- * @param {string} inputFile - Path to input file
- * @returns {string} - Formatted content
+ * Check if a file has uncommitted changes using git diff
  */
-function formatWithPlugin(inputFile) {
-    const content = fs.readFileSync(inputFile, 'utf-8');
-    // Use default options to match CLion defaults
-    return formatCMake(content, {});
+function checkGitDiff(filePath) {
+    try {
+        const result = spawnSync('git', ['diff', '--', filePath], {
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        const diff = result.stdout.trim();
+        return {
+            changed: diff.length > 0,
+            diff: diff
+        };
+    } catch (e) {
+        return { changed: false, error: e.message };
+    }
 }
 
 /**
- * Compare two strings and return diff information
- * @param {string} a - First string
- * @param {string} b - Second string
- * @returns {object} - Diff info
+ * Restore a file to its git HEAD state
  */
-function compareStrings(a, b) {
-    if (a === b) {
-        return { equal: true, diff: null };
+function restoreFile(filePath) {
+    try {
+        spawnSync('git', ['checkout', '--', filePath], {
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+    } catch (e) {
+        console.error(`  Warning: Failed to restore ${filePath}: ${e.message}`);
     }
+}
 
-    const linesA = a.split('\n');
-    const linesB = b.split('\n');
+/**
+ * Check if a directory has uncommitted changes
+ */
+function checkDirectoryClean(dirPath) {
+    try {
+        const result = spawnSync('git', ['status', '--porcelain', '--', dirPath], {
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
 
-    const differences = [];
-    const maxLines = Math.max(linesA.length, linesB.length);
-
-    for (let i = 0; i < maxLines; i++) {
-        const lineA = linesA[i];
-        const lineB = linesB[i];
-
-        if (lineA !== lineB) {
-            differences.push({
-                line: i + 1,
-                clion: lineA === undefined ? '<missing>' : JSON.stringify(lineA),
-                plugin: lineB === undefined ? '<missing>' : JSON.stringify(lineB)
-            });
-        }
+        const output = result.stdout.trim();
+        return {
+            clean: output.length === 0,
+            changes: output
+        };
+    } catch (e) {
+        return { clean: false, error: e.message };
     }
-
-    return {
-        equal: false,
-        linesA: linesA.length,
-        linesB: linesB.length,
-        differences: differences.slice(0, 10) // Limit to first 10 differences
-    };
 }
 
 /**
  * List all cmake files in a directory (recursively)
- * @param {string} dir - Directory path
- * @returns {string[]} - Array of file paths
  */
 function listCMakeFiles(dir) {
     const results = [];
@@ -316,13 +296,20 @@ function listCMakeFiles(dir) {
     return results;
 }
 
+// ============================================================
 // Main execution
+// ============================================================
+
 console.log('============================================================');
-console.log('CLion vs Plugin Formatter Comparison Test');
+console.log('CLion Formatter Comparison Test');
 console.log('============================================================');
 
 // Detect or validate CLion path
 let clionPath = options.clionPath;
+if (clionPath) {
+    clionPath = resolveClionPath(clionPath);
+}
+
 if (!clionPath) {
     console.log('🔍 Auto-detecting CLion path...');
     clionPath = detectClionPath();
@@ -335,7 +322,7 @@ if (!clionPath) {
    - CLION_PATH environment variable
 
    Example paths:
-   - macOS: /Applications/CLion.app/Contents/MacOS/clion
+   - macOS: /Applications/CLion.app
    - Linux: /opt/clion/bin/clion.sh or /snap/bin/clion
    - Windows: C:\\Program Files\\JetBrains\\CLion\\bin\\clion64.exe
 `);
@@ -347,6 +334,38 @@ console.log(`📍 CLion path: ${clionPath}`);
 // Verify CLion exists
 if (!fs.existsSync(clionPath)) {
     console.error(`❌ CLion executable not found: ${clionPath}`);
+    process.exit(1);
+}
+
+// Check git is available
+try {
+    spawnSync('git', ['--version'], { encoding: 'utf-8' });
+} catch (e) {
+    console.error('❌ Git is not available. This test requires git.');
+    process.exit(1);
+}
+
+// Check if test directory is clean (no uncommitted changes)
+const dirClean = checkDirectoryClean(options.testDir);
+if (!dirClean.clean) {
+    console.error(`
+❌ Test directory has uncommitted changes!
+`);
+    if (dirClean.changes) {
+        console.error('Modified files:');
+        const lines = dirClean.changes.split('\n').slice(0, 10);
+        for (const line of lines) {
+            console.error(`   ${line}`);
+        }
+        if (dirClean.changes.split('\n').length > 10) {
+            console.error('   ... (and more)');
+        }
+    }
+    console.error(`
+Please commit or restore the test files before running this test.
+You can restore files with:
+   git checkout -- ${options.testDir}
+`);
     process.exit(1);
 }
 
@@ -368,11 +387,8 @@ if (testFiles.length === 0) {
     process.exit(1);
 }
 
-console.log(`📁 Found ${testFiles.length} test file(s)\n`);
-
-// Create temp directory
-const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'clion-compare-'));
-console.log(`📂 Temp directory: ${tempDir}`);
+console.log(`📁 Found ${testFiles.length} test file(s)`);
+console.log(`📂 Test directory: ${options.testDir}`);
 console.log('');
 
 // Track results
@@ -389,52 +405,38 @@ for (let i = 0; i < testFiles.length; i++) {
 
     process.stdout.write(`[${i + 1}/${testFiles.length}] ${relativePath}... `);
 
-    const baseName = path.basename(testFile, '.cmake');
-    const clionOutputFile = path.join(tempDir, `${baseName}.clion.cmake`);
-    const pluginOutputFile = path.join(tempDir, `${baseName}.plugin.cmake`);
+    // Format with CLion (in-place)
+    const formatResult = formatWithClion(clionPath, testFile);
+    if (!formatResult.success) {
+        console.log(`⚠️  CLion format failed: ${formatResult.error}`);
+        results.errors.push({ file: relativePath, error: formatResult.error });
+        continue;
+    }
 
-    try {
-        // Format with CLion
-        const clionSuccess = formatWithClion(clionPath, testFile, clionOutputFile);
-        if (!clionSuccess) {
-            console.log('⚠️  CLion format failed');
-            results.errors.push({ file: relativePath, error: 'CLion format failed' });
-            continue;
-        }
+    // Check git diff
+    const diffResult = checkGitDiff(testFile);
 
-        // Format with plugin
-        const pluginResult = formatWithPlugin(testFile);
-        fs.writeFileSync(pluginOutputFile, pluginResult, 'utf-8');
+    if (diffResult.changed) {
+        console.log('❌ DIFFER');
+        results.failed.push({
+            file: relativePath,
+            fullPath: testFile,
+            diff: diffResult.diff
+        });
 
-        // Compare results
-        const clionContent = fs.readFileSync(clionOutputFile, 'utf-8');
-        const comparison = compareStrings(clionContent, pluginResult);
-
-        if (comparison.equal) {
-            console.log('✅ MATCH');
-            results.passed.push({ file: relativePath });
-        } else {
-            console.log('❌ DIFFER');
-            results.failed.push({
-                file: relativePath,
-                comparison,
-                clionFile: clionOutputFile,
-                pluginFile: pluginOutputFile
-            });
-
-            if (options.verbose) {
-                console.log(`   CLion lines: ${comparison.linesA}, Plugin lines: ${comparison.linesB}`);
-                console.log('   First differences:');
-                for (const diff of comparison.differences.slice(0, 5)) {
-                    console.log(`     Line ${diff.line}:`);
-                    console.log(`       CLion:  ${diff.clion}`);
-                    console.log(`       Plugin: ${diff.plugin}`);
-                }
+        if (options.verbose) {
+            console.log('   Diff:');
+            const diffLines = diffResult.diff.split('\n').slice(0, 20);
+            for (const line of diffLines) {
+                console.log(`   ${line}`);
+            }
+            if (diffResult.diff.split('\n').length > 20) {
+                console.log('   ... (truncated)');
             }
         }
-    } catch (e) {
-        console.log(`❌ ERROR: ${e.message}`);
-        results.errors.push({ file: relativePath, error: e.message });
+    } else {
+        console.log('✅ MATCH');
+        results.passed.push({ file: relativePath });
     }
 }
 
@@ -448,14 +450,12 @@ console.log(`⚠️  Errors: ${results.errors.length}/${testFiles.length}`);
 
 // Show failed files
 if (results.failed.length > 0) {
-    console.log('\n❌ Files with differences:');
-    for (const { file, clionFile, pluginFile } of results.failed) {
+    console.log('\n❌ Files with differences (CLion formatted differently):');
+    for (const { file } of results.failed) {
         console.log(`   ${file}`);
-        if (options.keepTemp) {
-            console.log(`      CLion:  ${clionFile}`);
-            console.log(`      Plugin: ${pluginFile}`);
-        }
     }
+    console.log('\n   Run with --verbose to see diffs, or use:');
+    console.log('   git diff test/datasets/well-formatted/default/');
 }
 
 // Show errors
@@ -466,21 +466,23 @@ if (results.errors.length > 0) {
     }
 }
 
-// Cleanup temp directory
-if (!options.keepTemp) {
-    try {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-        console.log(`\n🗑️  Cleaned up temp directory`);
-    } catch (e) {
-        console.log(`\n⚠️  Could not clean temp directory: ${tempDir}`);
+// Restore files if requested
+if (options.restore && (results.failed.length > 0 || results.errors.length > 0)) {
+    console.log('\n🔄 Restoring modified files...');
+    for (const { fullPath } of results.failed) {
+        restoreFile(fullPath);
     }
-} else {
-    console.log(`\n📂 Temp files kept at: ${tempDir}`);
+    console.log('   Files restored to original state.');
+} else if (!options.restore && results.failed.length > 0) {
+    console.log('\n📝 Files left in CLion-formatted state.');
+    console.log('   Review changes with: git diff');
+    console.log('   Restore all with: git checkout -- test/datasets/well-formatted/default/');
+    console.log('   Or run with --restore to auto-restore.');
 }
 
 // Exit with appropriate code
 const exitCode = results.failed.length + results.errors.length;
 if (exitCode === 0) {
-    console.log('\n🎉 All tests passed!');
+    console.log('\n🎉 All tests passed! Files match CLion formatting.');
 }
 process.exit(exitCode);
