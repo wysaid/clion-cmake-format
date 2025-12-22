@@ -182,13 +182,41 @@ function formatDirectoryWithPlugin(dir: string): void {
 }
 
 /**
+ * List all CMake files in a directory recursively
+ */
+function listCMakeFiles(dir: string): string[] {
+    const results: string[] = [];
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+            results.push(...listCMakeFiles(fullPath));
+        } else if (entry.isFile() && (entry.name.endsWith('.cmake') || entry.name === 'CMakeLists.txt')) {
+            results.push(fullPath);
+        }
+    }
+
+    return results;
+}
+
+/**
  * Format all CMake files in a directory with CLion
- * Uses directory-level formatting for much better performance
+ * Formats specific CMake files only (*.cmake and CMakeLists.txt), not entire directories
  */
 function formatDirectoryWithClion(clionPath: string, dir: string): { success: boolean; error?: string } {
     try {
-        // Use -R for recursive scanning of directories
-        const result = spawnSync(clionPath, ['format', '-R', '-allowDefaults', dir], {
+        // List all CMake files first
+        const cmakeFiles = listCMakeFiles(dir);
+        
+        if (cmakeFiles.length === 0) {
+            return { success: true };
+        }
+
+        // Format all files in one batch for better performance
+        const args = ['format', '-allowDefaults', ...cmakeFiles];
+        const result = spawnSync(clionPath, args, {
             encoding: 'utf-8',
             timeout: 60000,
             stdio: ['pipe', 'pipe', 'pipe']

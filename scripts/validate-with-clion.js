@@ -7,10 +7,13 @@
  * It does NOT compare plugin output with CLion - for that, see test/integration/clion-comparison.test.ts
  *
  * This script:
- * 1. Formats test directory using CLion's command-line formatter (batch mode with -R flag)
- * 2. Uses `git diff` to detect any changes
- * 3. Reports files that differ from CLion's formatting standard
- * 4. Optionally restores files to original state after testing
+ * 1. Lists all CMake files (*.cmake and CMakeLists.txt) in the test directory
+ * 2. Formats them using CLion's command-line formatter (batch mode)
+ * 3. Uses `git diff` to detect any changes
+ * 4. Reports files that differ from CLion's formatting standard
+ * 5. Optionally restores files to original state after testing
+ *
+ * Note: Only CMake files are formatted - other files like .jsonc, .md are ignored
  *
  * Usage:
  *   node scripts/validate-with-clion.js [options]
@@ -30,8 +33,8 @@
  *   - CLion must be installed
  *   - Git must be available
  *
- * Note: This script now uses batch directory formatting (-R flag) for better performance,
- *       instead of formatting files one by one.
+ * Note: This script now uses batch file formatting for better performance,
+ *       and only formats CMake files (*.cmake and CMakeLists.txt), not other file types.
  */
 
 const fs = require('fs');
@@ -82,6 +85,8 @@ This script validates that test files match CLion's formatting standard by forma
 them with CLion and checking for changes. Test files should already be correctly 
 formatted - any change indicates they need adjustment.
 
+Only CMake files (*.cmake and CMakeLists.txt) are formatted - other files are ignored.
+
 Note: This does NOT compare plugin vs CLion output. For that, run: npm run test:integration
 
 Usage:
@@ -107,8 +112,8 @@ Examples:
   node scripts/validate-with-clion.js --test-dir test/datasets/basic
 
   # Restore files after validation
-  node scripts/validate-with-clion.js --restore --verbose
-
+  node scripts/validate-with-file formatting for better performance and only formats
+      CMake files (*.cmake and CMakeLists.txt), ignoring other file types like .jsonc or .md
 Note: This script uses batch directory formatting (-R flag) for much better performance
       compared to formatting files individually.
 `);
@@ -208,15 +213,21 @@ function detectClionPath() {
 }
 
 /**
- * Format a directory using CLion command-line formatter (recursive, in-place)
- * Uses -R flag for batch formatting, which is much faster than formatting files one by one
+ * Format CMake files using CLion command-line formatter (batch, in-place)
+ * Formats specific files only (*.cmake and CMakeLists.txt), not entire directories
  */
-function formatDirectoryWithClion(clionPath, dir) {
+function formatCMakeFilesWithClion(clionPath, files) {
+    if (files.length === 0) {
+        return { success: true };
+    }
+
     try {
-        // Use -R for recursive scanning of directories
-        const result = spawnSync(clionPath, ['format', '-R', '-allowDefaults', dir], {
+        // Format all files in one batch for better performance
+        // CLion accepts multiple file paths as arguments
+        const args = ['format', '-allowDefaults', ...files];
+        const result = spawnSync(clionPath, args, {
             encoding: 'utf-8',
-            timeout: 120000, // Increased timeout for directory formatting
+            timeout: 120000, // Increased timeout for batch formatting
             stdio: ['pipe', 'pipe', 'pipe']
         });
 
@@ -303,6 +314,7 @@ function checkDirectoryClean(dirPath) {
 
 /**
  * List all cmake files in a directory (recursively)
+ * Includes *.cmake files and CMakeLists.txt files
  */
 function listCMakeFiles(dir) {
     const results = [];
@@ -315,7 +327,7 @@ function listCMakeFiles(dir) {
 
             if (entry.isDirectory()) {
                 results.push(...listCMakeFiles(fullPath));
-            } else if (entry.isFile() && entry.name.endsWith('.cmake')) {
+            } else if (entry.isFile() && (entry.name.endsWith('.cmake') || entry.name === 'CMakeLists.txt')) {
                 results.push(fullPath);
             }
         }
@@ -425,12 +437,12 @@ if (testFiles.length === 0) {
     process.exit(1);
 }
 
-console.log(`📁 Found ${testFiles.length} test file(s)`);
+console.log(`📁 Found ${testFiles.length} CMake file(s)`);
 console.log(`📂 Test directory: ${options.testDir}`);
 
-// Format entire directory with CLion (batch mode)
-console.log('\n🔧 Formatting directory with CLion...');
-const formatResult = formatDirectoryWithClion(clionPath, options.testDir);
+// Format CMake files with CLion (batch mode)
+console.log('\n🔧 Formatting CMake files with CLion...');
+const formatResult = formatCMakeFilesWithClion(clionPath, testFiles);
 if (!formatResult.success) {
     console.error(`\n❌ CLion formatting failed: ${formatResult.error}`);
     process.exit(1);
