@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatCMake, DEFAULT_OPTIONS as FORMATTER_DEFAULT_OPTIONS, FormatterOptions } from './formatter';
-import { loadConfigFile, getConfigForDocument, findConfigFile } from './config';
+import { loadConfigFile, findConfigFile } from './config';
 
 export interface ValidationResult {
     ok: boolean;
@@ -72,12 +72,13 @@ export function validateDirectory(directory: string, workspaceRoot?: string): Va
         }
 
         // Skip config files
-        if (e.name === '.cc-format.jsonc' || e.name === '.cc-format') continue;
+        if (e.name === '.cc-format.jsonc' || e.name === '.cc-format') { continue; }
 
         // Consider common cmake filenames
         if (e.name.endsWith('.cmake') || e.name === 'CMakeLists.txt') {
             try {
                 results.push(validateFile(full, workspaceRoot));
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (err: any) {
                 results.push({ ok: false, filePath: full, original: '', formatted: '', reason: `error reading file: ${err && err.message}` });
             }
