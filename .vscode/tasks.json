@@ -85,20 +85,6 @@
                 "clear": true,
                 "focus": false
             }
-        },
-        {
-            "label": "npm: test:cmake-official",
-            "type": "npm",
-            "script": "test:cmake-official",
-            "detail": "Test formatting idempotency on CMake official test files",
-            "problemMatcher": [],
-            "group": "test",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "clear": true,
-                "focus": false
-            }
         }
     ]
 }
