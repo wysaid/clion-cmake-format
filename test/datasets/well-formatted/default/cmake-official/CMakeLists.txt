@@ -321,7 +321,7 @@ if (BUILD_TESTING)
 
     if (CMake_TEST_XCODE_VERSION AND CMAKE_OSX_SDKVERSION AND CMAKE_OSX_SDKPRODUCT)
         if ((NOT CMake_TEST_XCODE_VERSION VERSION_LESS 6.1) AND
-                ((NOT CMAKE_OSX_SDKPRODUCT STREQUAL "Mac OS X") OR
+        ((NOT CMAKE_OSX_SDKPRODUCT STREQUAL "Mac OS X") OR
         (NOT CMAKE_OSX_SDKVERSION VERSION_LESS 10.10)))
             if (CMAKE_GENERATOR STREQUAL "Xcode")
                 set(CMake_TEST_XCODE_SWIFT 1)
@@ -567,7 +567,7 @@ if (BUILD_TESTING)
         ADD_TEST_MACRO(SourceFileIncludeDirProperty SourceFileIncludeDirProperty)
     endif ()
     if (CMAKE_CXX_COMPILER_ID STREQUAL "LCC" OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-        AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7))
+            AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7))
         set(runCxxDialectTest 1)
     endif ()
     if (CMAKE_CXX_COMPILER_ID STREQUAL Clang
@@ -623,9 +623,9 @@ if (BUILD_TESTING)
 
     # run test for BundleUtilities on supported platforms/compilers
     if ((MSVC OR
-        MINGW OR
-        CMAKE_SYSTEM_NAME MATCHES "Linux" OR
-        CMAKE_SYSTEM_NAME MATCHES "Darwin")
+            MINGW OR
+            CMAKE_SYSTEM_NAME MATCHES "Linux" OR
+            CMAKE_SYSTEM_NAME MATCHES "Darwin")
             AND NOT CMAKE_GENERATOR STREQUAL "Watcom WMake")
 
         add_test(BundleUtilities ${CMAKE_CTEST_COMMAND}
@@ -725,7 +725,7 @@ if (BUILD_TESTING)
     endif ()
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "LCC" OR
-            ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND
+    ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND
     (NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 4.2) AND
     (CMAKE_SYSTEM_NAME MATCHES "Linux")))
 
@@ -1231,7 +1231,7 @@ if (BUILD_TESTING)
                 # Check if distro has symbols or shlibs data
                 file(GLOB SHLIBS_FILES_EXIST "/var/lib/dpkg/info/*.shlibs" "/var/lib/dpkg/info/*.symbols")
                 if (NOT SHLIBDEPS_EXECUTABLE_VERSION VERSION_LESS 1.19 OR
-                        (NOT SHLIBDEPS_EXECUTABLE_VERSION VERSION_LESS 1.17 AND NOT CMAKE_BINARY_DIR MATCHES ".*[ ].*"))
+                (NOT SHLIBDEPS_EXECUTABLE_VERSION VERSION_LESS 1.17 AND NOT CMAKE_BINARY_DIR MATCHES ".*[ ].*"))
                     list(APPEND DEB_CONFIGURATIONS_TO_TEST "shlibdeps-with-private-lib-failure"
                             "shlibdeps-with-private-lib-success"
                             "shlibdeps-with-ORIGIN-RPATH-failure")
@@ -3451,10 +3451,10 @@ if (BUILD_TESTING)
     list(APPEND TEST_BUILD_DIRS "${CMake_BINARY_DIR}/Tests/IncludeDirectories")
 
     if (CMAKE_GENERATOR MATCHES "^((Unix|MSYS) Makefiles|Ninja|FASTBuild)$" AND
-            ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.4)
-        OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
-        OR (CMAKE_CXX_COMPILER_ID STREQUAL "LCC")
-        OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
+    ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.4)
+            OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+            OR (CMAKE_CXX_COMPILER_ID STREQUAL "LCC")
+            OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
         add_test(IncludeDirectoriesCPATH ${CMAKE_CTEST_COMMAND}
                 --build-and-test
                 "${CMake_SOURCE_DIR}/Tests/IncludeDirectoriesCPATH"
