@@ -4,18 +4,18 @@ project(HelloWorld)
 include(${CMAKE_ROOT}/Helpers/hello_world_helper.cmake)
 
 function(
-    say
-    word
+        say
+        word
 )
     message("${word}")
 endfunction()
 
 add_executable(foo
-    bar.cxx
+        bar.cxx
 )
 
 if (TRUE
-    AND FALSE
+        AND FALSE
 )
     say(Hi)
 endif ()

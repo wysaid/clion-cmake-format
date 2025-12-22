@@ -1,5 +1,5 @@
 set(failure_test_executables
-    ${CMAKE_CURRENT_BINARY_DIR}/failure_test_targets)
+        ${CMAKE_CURRENT_BINARY_DIR}/failure_test_targets)
 file(WRITE ${failure_test_executables} "")
 
 # Check if we should do anything. If the compiler doesn't support hidden
@@ -18,7 +18,7 @@ set(counter 0)
 while (1)
     # Find first occurrence of link error marker in remaining content
     string(REGEX MATCH "//([^;\n]+;) LINK ERROR( [(][^)]+[)])?\n(.*)"
-        match "${content_post}")
+            match "${content_post}")
     if (match STREQUAL "")
         # No more matches
         break ()
@@ -42,7 +42,7 @@ while (1)
         if (${condition})
         else ()
             message(STATUS "Not testing '${statement}'; "
-                "condition (${condition}) is FALSE")
+                    "condition (${condition}) is FALSE")
             set(content_pre "${content_pre}// link error removed\n")
             continue ()
         endif ()

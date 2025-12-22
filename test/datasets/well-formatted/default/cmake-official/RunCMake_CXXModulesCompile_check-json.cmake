@@ -48,7 +48,7 @@ endfunction()
 function(check_json_value path actual_type expect_type actual_value expect_value)
     if (NOT actual_type STREQUAL expect_type)
         string(APPEND RunCMake_TEST_FAILED
-            "Type mismatch at:\n ${path}\nexpected:\n ${expect_type}\nactual:\n ${actual_type}\n")
+                "Type mismatch at:\n ${path}\nexpected:\n ${expect_type}\nactual:\n ${actual_type}\n")
         set(RunCMake_TEST_FAILED "${RunCMake_TEST_FAILED}" PARENT_SCOPE)
         return()
     endif ()
@@ -58,12 +58,12 @@ function(check_json_value path actual_type expect_type actual_value expect_value
     elseif (actual_type STREQUAL BOOLEAN)
         if (NOT actual_value STREQUAL expect_value)
             string(APPEND RunCMake_TEST_FAILED
-                "Boolean mismatch at:\n ${path}\nexpected:\n ${expect_value}\nactual:\n ${actual_value}\n")
+                    "Boolean mismatch at:\n ${path}\nexpected:\n ${expect_value}\nactual:\n ${actual_value}\n")
         endif ()
     elseif (actual_type STREQUAL NUMBER)
         if (NOT actual_value EQUAL expect_value)
             string(APPEND RunCMake_TEST_FAILED
-                "Number mismatch at:\n ${path}\nexpected:\n ${expect_value}\nactual:\n ${actual_value}\n")
+                    "Number mismatch at:\n ${path}\nexpected:\n ${expect_value}\nactual:\n ${actual_value}\n")
         endif ()
     elseif (actual_type STREQUAL STRING)
         # Allow some values to be ignored.
@@ -77,23 +77,23 @@ function(check_json_value path actual_type expect_type actual_value expect_value
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" actual_value_check "${actual_value_check}")
             if (NOT actual_value_check MATCHES "^${expect_value_expanded}$")
                 string(APPEND RunCMake_TEST_FAILED
-                    "String mismatch (path regex) at:\n ${path}\nexpected:\n ^${expect_value_expanded}$\nactual:\n ${actual_value}\n")
+                        "String mismatch (path regex) at:\n ${path}\nexpected:\n ^${expect_value_expanded}$\nactual:\n ${actual_value}\n")
             endif ()
         elseif (expect_value MATCHES "^REGEX:")
             if (NOT actual_value MATCHES "^${expect_value_expanded}$")
                 string(APPEND RunCMake_TEST_FAILED
-                    "String mismatch (regex) at:\n ${path}\nexpected:\n ^${expect_value_expanded}$\nactual:\n ${actual_value}\n")
+                        "String mismatch (regex) at:\n ${path}\nexpected:\n ^${expect_value_expanded}$\nactual:\n ${actual_value}\n")
             endif ()
         elseif (expect_value MATCHES "^PATH:")
             string(REPLACE "\\" "/" actual_value_check "${actual_value}")
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" actual_value_check "${actual_value_check}")
             if (NOT actual_value_check STREQUAL "${expect_value_expanded}")
                 string(APPEND RunCMake_TEST_FAILED
-                    "String mismatch (path) at:\n ${path}\nexpected:\n ${expect_value_expanded}\nactual:\n ${actual_value}\n")
+                        "String mismatch (path) at:\n ${path}\nexpected:\n ${expect_value_expanded}\nactual:\n ${actual_value}\n")
             endif ()
         elseif (NOT actual_value STREQUAL expect_value_expanded)
             string(APPEND RunCMake_TEST_FAILED
-                "String mismatch at:\n ${path}\nexpected:\n ${expect_value_expanded}\nactual:\n ${actual_value}\n")
+                    "String mismatch at:\n ${path}\nexpected:\n ${expect_value_expanded}\nactual:\n ${actual_value}\n")
         endif ()
     elseif (actual_type STREQUAL ARRAY)
         check_json_array("${path}" "${actual_value}" "${expect_value}")
@@ -113,7 +113,7 @@ function(check_json_array path actual expect)
             string(JSON type TYPE "${actual}" "${idx}")
             string(JSON item GET "${actual}" "${idx}")
             if (type STREQUAL "STRING" AND
-                item MATCHES "${item_filter}")
+                    item MATCHES "${item_filter}")
                 string(JSON actual REMOVE "${actual}" "${idx}")
                 math(EXPR iter_len "${iter_len} - 1")
             else ()
@@ -128,10 +128,10 @@ function(check_json_array path actual expect)
     set(iter_len "${actual_len}")
     if (actual_len LESS expect_len)
         string(APPEND RunCMake_TEST_FAILED
-            "Missing array items at:\n ${path}\n")
+                "Missing array items at:\n ${path}\n")
     elseif (expect_len LESS actual_len)
         string(APPEND RunCMake_TEST_FAILED
-            "Extra array items at:\n ${path}\n")
+                "Extra array items at:\n ${path}\n")
         set(iter_len "${expect_len}")
     endif ()
 
@@ -187,7 +187,7 @@ function(check_json_object path actual expect)
         json_placeholders("${expect_key}" expect_key_expanded)
 
         if (expect_key_expanded IN_LIST actual_keys_missed AND
-            expect_key IN_LIST expect_keys_missed)
+                expect_key IN_LIST expect_keys_missed)
             list(APPEND common_keys "${expect_key}")
         endif ()
 
@@ -198,12 +198,12 @@ function(check_json_object path actual expect)
     if (actual_keys_missed)
         string(REPLACE ";" ", " actual_keys_missed_text "${actual_keys_missed}")
         string(APPEND RunCMake_TEST_FAILED
-            "Extra unexpected members at:\n ${path}\nactual:\n ${actual_keys_missed_text}\n")
+                "Extra unexpected members at:\n ${path}\nactual:\n ${actual_keys_missed_text}\n")
     endif ()
     if (expect_keys_missed)
         string(REPLACE ";" ", " expect_keys_missed_text "${expect_keys_missed}")
         string(APPEND RunCMake_TEST_FAILED
-            "Missing expected members at\n ${path}\nactual:\n ${expect_keys_missed_text}\n")
+                "Missing expected members at\n ${path}\nactual:\n ${expect_keys_missed_text}\n")
     endif ()
 
     foreach (key IN LISTS common_keys)

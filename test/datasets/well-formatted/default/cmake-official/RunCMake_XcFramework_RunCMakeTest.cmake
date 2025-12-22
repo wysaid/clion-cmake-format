@@ -203,12 +203,12 @@ else ()
 endif ()
 if (maybe_ios_catalyst)
     set(maybe_ios_catalyst_mylib
-        -library ${bld_dir}/export-install/lib/ios-catalyst/libmylib.a
-        -headers ${src_dir}/mylib/include
+            -library ${bld_dir}/export-install/lib/ios-catalyst/libmylib.a
+            -headers ${src_dir}/mylib/include
     )
     set(maybe_ios_catalyst_mylib_genex
-        -library ${bld_dir}/export-install/lib/ios-catalyst/libmylib-genex.a
-        -headers ${src_dir}/mylib/include
+            -library ${bld_dir}/export-install/lib/ios-catalyst/libmylib-genex.a
+            -headers ${src_dir}/mylib/include
     )
 else ()
     set(maybe_ios_catalyst_mylib "")
@@ -216,35 +216,35 @@ else ()
 endif ()
 set(RunCMake_TEST_BINARY_DIR ${RunCMake_BINARY_DIR}/export-install)
 run_cmake_command(export-install-xcframework xcodebuild -create-xcframework
-    -output ${bld_dir}/export-install/lib/mylib.xcframework
-    -library ${bld_dir}/export-install/lib/macos/libmylib.a
-    -headers ${src_dir}/mylib/include
-    -library ${bld_dir}/export-install/lib/ios/libmylib.a
-    -headers ${src_dir}/mylib/include
-    ${maybe_ios_catalyst_mylib}
-    -library ${bld_dir}/export-install/lib/ios-simulator/libmylib.a
-    -headers ${src_dir}/mylib/include
+        -output ${bld_dir}/export-install/lib/mylib.xcframework
+        -library ${bld_dir}/export-install/lib/macos/libmylib.a
+        -headers ${src_dir}/mylib/include
+        -library ${bld_dir}/export-install/lib/ios/libmylib.a
+        -headers ${src_dir}/mylib/include
+        ${maybe_ios_catalyst_mylib}
+        -library ${bld_dir}/export-install/lib/ios-simulator/libmylib.a
+        -headers ${src_dir}/mylib/include
 )
 run_cmake_command(export-install-xcframework-genex xcodebuild -create-xcframework
-    -output ${bld_dir}/export-install/lib2/mylib-genex.xcframework
-    -library ${bld_dir}/export-install/lib/macos/libmylib-genex.a
-    -headers ${src_dir}/mylib/include
-    -library ${bld_dir}/export-install/lib/ios/libmylib-genex.a
-    -headers ${src_dir}/mylib/include
-    ${maybe_ios_catalyst_mylib_genex}
-    -library ${bld_dir}/export-install/lib/ios-simulator/libmylib-genex.a
-    -headers ${src_dir}/mylib/include
+        -output ${bld_dir}/export-install/lib2/mylib-genex.xcframework
+        -library ${bld_dir}/export-install/lib/macos/libmylib-genex.a
+        -headers ${src_dir}/mylib/include
+        -library ${bld_dir}/export-install/lib/ios/libmylib-genex.a
+        -headers ${src_dir}/mylib/include
+        ${maybe_ios_catalyst_mylib_genex}
+        -library ${bld_dir}/export-install/lib/ios-simulator/libmylib-genex.a
+        -headers ${src_dir}/mylib/include
 )
 set(RunCMake_TEST_BINARY_DIR ${RunCMake_BINARY_DIR}/export-macos-build)
 run_cmake_command(export-build-macos-xcframework xcodebuild -create-xcframework
-    -output ${bld_dir}/export-macos-build/lib/mylib.xcframework
-    -library ${bld_dir}/export-macos-build/lib/macos${_config_dir}/libmylib.a
-    -headers ${src_dir}/mylib/include
+        -output ${bld_dir}/export-macos-build/lib/mylib.xcframework
+        -library ${bld_dir}/export-macos-build/lib/macos${_config_dir}/libmylib.a
+        -headers ${src_dir}/mylib/include
 )
 run_cmake_command(export-build-macos-xcframework-genex xcodebuild -create-xcframework
-    -output ${bld_dir}/export-macos-build/lib/mylib-genex.xcframework
-    -library ${bld_dir}/export-macos-build/lib/macos${_config_dir}/libmylib-genex.a
-    -headers ${src_dir}/mylib/include
+        -output ${bld_dir}/export-macos-build/lib/mylib-genex.xcframework
+        -library ${bld_dir}/export-macos-build/lib/macos${_config_dir}/libmylib-genex.a
+        -headers ${src_dir}/mylib/include
 )
 unset(RunCMake_TEST_NO_CLEAN)
 unset(RunCMake_TEST_BINARY_DIR)

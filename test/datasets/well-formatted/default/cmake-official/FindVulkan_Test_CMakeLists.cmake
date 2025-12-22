@@ -4,18 +4,18 @@ project(TestFindVulkan C CXX)
 include(CTest)
 
 set(components
-    glslang
-    shaderc_combined
-    SPIRV-Tools
-    volk
-    dxc
+        glslang
+        shaderc_combined
+        SPIRV-Tools
+        volk
+        dxc
 )
 
 if (APPLE)
     list(APPEND components MoltenVK)
 endif ()
 find_package(Vulkan REQUIRED
-    COMPONENTS ${components})
+        COMPONENTS ${components})
 
 add_executable(test_tgt main.c)
 target_link_libraries(test_tgt Vulkan::Vulkan)
@@ -46,8 +46,8 @@ add_test(NAME test_tgt_glslang COMMAND test_tgt_glslang)
 get_property(glslang_debug_location TARGET Vulkan::glslang PROPERTY IMPORTED_LOCATION_DEBUG)
 if (NOT glslang_debug_location)
     set_property(TARGET test_tgt_glslang
-        PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+            PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif ()
 
 add_executable(test_tgt_shaderc_combined main-shaderc_combined.cxx)
@@ -57,8 +57,8 @@ add_test(NAME test_tgt_shaderc_combined COMMAND test_tgt_shaderc_combined)
 get_property(shaderc_combined_debug_location TARGET Vulkan::shaderc_combined PROPERTY IMPORTED_LOCATION_DEBUG)
 if (NOT shaderc_combined_debug_location)
     set_property(TARGET test_tgt_shaderc_combined
-        PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+            PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif ()
 
 add_executable(test_tgt_SPIRV-Tools main-SPIRV-Tools.c)
@@ -68,8 +68,8 @@ add_test(NAME test_tgt_SPIRV-Tools COMMAND test_tgt_SPIRV-Tools)
 get_property(SPIRV-Tools_debug_location TARGET Vulkan::SPIRV-Tools PROPERTY IMPORTED_LOCATION_DEBUG)
 if (NOT SPIRV-Tools_debug_location)
     set_property(TARGET test_tgt_SPIRV-Tools
-        PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+            PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif ()
 
 if (APPLE)
@@ -88,27 +88,27 @@ add_test(NAME test_tgt_dxc_lib COMMAND test_tgt_dxc_lib)
 
 if (Vulkan_GLSLC_EXECUTABLE)
     add_test(NAME test_glslc
-        COMMAND ${CMAKE_COMMAND}
-        "-DVULKAN_GLSLC_EXECUTABLE=${Vulkan_GLSLC_EXECUTABLE}"
-        "-DVULKAN_GLSLC_EXECUTABLE_TARGET=$<TARGET_FILE:Vulkan::glslc>"
-        -P "${CMAKE_CURRENT_LIST_DIR}/Run-glslc.cmake"
+            COMMAND ${CMAKE_COMMAND}
+            "-DVULKAN_GLSLC_EXECUTABLE=${Vulkan_GLSLC_EXECUTABLE}"
+            "-DVULKAN_GLSLC_EXECUTABLE_TARGET=$<TARGET_FILE:Vulkan::glslc>"
+            -P "${CMAKE_CURRENT_LIST_DIR}/Run-glslc.cmake"
     )
 endif ()
 
 if (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
     add_test(NAME test_glslangValidator
-        COMMAND ${CMAKE_COMMAND}
-        "-DVULKAN_GLSLANG_VALIDATOR_EXECUTABLE=${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE}"
-        "-DVULKAN_GLSLANG_VALIDATOR_EXECUTABLE_TARGET=$<TARGET_FILE:Vulkan::glslangValidator>"
-        -P "${CMAKE_CURRENT_LIST_DIR}/Run-glslangValidator.cmake"
+            COMMAND ${CMAKE_COMMAND}
+            "-DVULKAN_GLSLANG_VALIDATOR_EXECUTABLE=${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE}"
+            "-DVULKAN_GLSLANG_VALIDATOR_EXECUTABLE_TARGET=$<TARGET_FILE:Vulkan::glslangValidator>"
+            -P "${CMAKE_CURRENT_LIST_DIR}/Run-glslangValidator.cmake"
     )
 endif ()
 
 if (Vulkan_dxc_EXECUTABLE)
     add_test(NAME test_dxc_exe
-        COMMAND ${CMAKE_COMMAND}
-        "-DVULKAN_DXC_EXECUTABLE=${Vulkan_dxc_EXECUTABLE}"
-        "-DVULKAN_DXC_EXECUTABLE_TARGET=$<TARGET_FILE:Vulkan::dxc_exe>"
-        -P "${CMAKE_CURRENT_LIST_DIR}/Run-dxc_exe.cmake"
+            COMMAND ${CMAKE_COMMAND}
+            "-DVULKAN_DXC_EXECUTABLE=${Vulkan_dxc_EXECUTABLE}"
+            "-DVULKAN_DXC_EXECUTABLE_TARGET=$<TARGET_FILE:Vulkan::dxc_exe>"
+            -P "${CMAKE_CURRENT_LIST_DIR}/Run-dxc_exe.cmake"
     )
 endif ()

@@ -2,11 +2,11 @@
 # file LICENSE.rst or https://cmake.org/licensing for details.
 
 foreach (
-    arg
-    IN ITEMS
-    RunCMake_GENERATOR
-    RunCMake_SOURCE_DIR
-    RunCMake_BINARY_DIR
+        arg
+        IN ITEMS
+        RunCMake_GENERATOR
+        RunCMake_SOURCE_DIR
+        RunCMake_BINARY_DIR
 )
     if (NOT DEFINED ${arg})
         message(FATAL_ERROR "${arg} not given!")
@@ -131,8 +131,8 @@ function(run_cmake test)
             list(APPEND RunCMake_TEST_COMMAND "-DCMAKE_GENERATOR_INSTANCE=${RunCMake_GENERATOR_INSTANCE}")
         endif ()
         list(APPEND RunCMake_TEST_COMMAND
-            -DRunCMake_TEST=${test}
-            --no-warn-unused-cli
+                -DRunCMake_TEST=${test}
+                --no-warn-unused-cli
         )
     else ()
         set(RunCMake_TEST_OPTIONS "")
@@ -193,42 +193,42 @@ function(run_cmake test)
 
     # Remove incidental content from both stdout and stderr.
     string(CONCAT ignore_line_regex
-        "(^|\n)((==[0-9]+=="
-        "|[^\n]*BullseyeCoverage "
-        "|[a-z]+\\([0-9]+\\) malloc:"
-        "|clang[^:]*: warning: the object size sanitizer has no effect at -O0, but is explicitly enabled:"
-        "|flang-new: warning: argument unused during compilation: .-flang-experimental-exec."
-        "|icp?x: remark: Note that use of .-g. without any optimization-level option will turn off most compiler optimizations"
-        "|ifx: remark #10440: Note that use of a debug option without any optimization-level option will turnoff most compiler optimizations"
-        "|lld-link: warning: procedure symbol record for .* refers to PDB item index [0-9A-Fa-fx]+ which is not a valid function ID record"
-        "|ld: warning: .* has a LOAD segment with RWX permissions"
-        "|Error kstat returned"
-        "|Hit xcodebuild bug"
-        "|Recompacting log\\.\\.\\."
+            "(^|\n)((==[0-9]+=="
+            "|[^\n]*BullseyeCoverage "
+            "|[a-z]+\\([0-9]+\\) malloc:"
+            "|clang[^:]*: warning: the object size sanitizer has no effect at -O0, but is explicitly enabled:"
+            "|flang-new: warning: argument unused during compilation: .-flang-experimental-exec."
+            "|icp?x: remark: Note that use of .-g. without any optimization-level option will turn off most compiler optimizations"
+            "|ifx: remark #10440: Note that use of a debug option without any optimization-level option will turnoff most compiler optimizations"
+            "|lld-link: warning: procedure symbol record for .* refers to PDB item index [0-9A-Fa-fx]+ which is not a valid function ID record"
+            "|ld: warning: .* has a LOAD segment with RWX permissions"
+            "|Error kstat returned"
+            "|Hit xcodebuild bug"
+            "|Recompacting log\\.\\.\\."
 
-        "|LICENSE WARNING:"
-        "|Your license to use PGI[^\n]*expired"
-        "|Please obtain a new version at"
-        "|contact PGI Sales at"
-        "|ic(p?c|l): remark #10441: The Intel\\(R\\) C\\+\\+ Compiler Classic \\(ICC\\) is deprecated"
+            "|LICENSE WARNING:"
+            "|Your license to use PGI[^\n]*expired"
+            "|Please obtain a new version at"
+            "|contact PGI Sales at"
+            "|ic(p?c|l): remark #10441: The Intel\\(R\\) C\\+\\+ Compiler Classic \\(ICC\\) is deprecated"
 
-        "|[^\n]*install_name_tool: warning: changes being made to the file will invalidate the code signature in:"
-        "|[^\n]*(createItemModels|_NSMainThread|Please file a bug at)"
-        "|[^\n]*xcodebuild[^\n]*DVTAssertions: Warning"
-        "|[^\n]*xcodebuild[^\n]*DVTCoreDeviceEnabledState: DVTCoreDeviceEnabledState_Disabled set via user default"
-        "|[^\n]*xcodebuild[^\n]*DVTPlugInManager"
-        "|[^\n]*xcodebuild[^\n]*DVTSDK: Warning: SDK path collision for path"
-        "|[^\n]*xcodebuild[^\n]*IDERunDestination: Supported platforms for the buildables in the current scheme is empty"
-        "|[^\n]*xcodebuild[^\n]*Requested but did not find extension point with identifier"
-        "|[^\n]*xcodebuild[^\n]*nil host used in call to allows.*HTTPSCertificateForHost"
-        "|[^\n]*xcodebuild[^\n]*warning: file type[^\n]*is based on missing file type"
-        "|[^\n]*objc[^\n]*: Class [^\n]* One of the two will be used. Which one is undefined."
-        "|[^\n]*is a member of multiple groups"
-        "|[^\n]*offset in archive not a multiple of 8"
-        "|[^\n]*from Time Machine by path"
-        "|[^\n]*Bullseye Testing Technology"
-        ${RunCMake_TEST_EXTRA_IGNORE_LINE_REGEX}
-        ")[^\n]*\n)+"
+            "|[^\n]*install_name_tool: warning: changes being made to the file will invalidate the code signature in:"
+            "|[^\n]*(createItemModels|_NSMainThread|Please file a bug at)"
+            "|[^\n]*xcodebuild[^\n]*DVTAssertions: Warning"
+            "|[^\n]*xcodebuild[^\n]*DVTCoreDeviceEnabledState: DVTCoreDeviceEnabledState_Disabled set via user default"
+            "|[^\n]*xcodebuild[^\n]*DVTPlugInManager"
+            "|[^\n]*xcodebuild[^\n]*DVTSDK: Warning: SDK path collision for path"
+            "|[^\n]*xcodebuild[^\n]*IDERunDestination: Supported platforms for the buildables in the current scheme is empty"
+            "|[^\n]*xcodebuild[^\n]*Requested but did not find extension point with identifier"
+            "|[^\n]*xcodebuild[^\n]*nil host used in call to allows.*HTTPSCertificateForHost"
+            "|[^\n]*xcodebuild[^\n]*warning: file type[^\n]*is based on missing file type"
+            "|[^\n]*objc[^\n]*: Class [^\n]* One of the two will be used. Which one is undefined."
+            "|[^\n]*is a member of multiple groups"
+            "|[^\n]*offset in archive not a multiple of 8"
+            "|[^\n]*from Time Machine by path"
+            "|[^\n]*Bullseye Testing Technology"
+            ${RunCMake_TEST_EXTRA_IGNORE_LINE_REGEX}
+            ")[^\n]*\n)+"
     )
     if (RunCMake_IGNORE_POLICY_VERSION_DEPRECATION)
         string(REGEX REPLACE [[
@@ -353,8 +353,8 @@ function(RunCMake_check_file type file expect_content)
             string(REPLACE "\n" "\n expect-${type}> " expect_content " expect-${type}> ${expect_content}")
             string(REPLACE "\n" "\n actual-${type}> " actual_content " actual-${type}> ${actual_content}")
             string(APPEND RunCMake_TEST_FAILED "${type} does not match that expected.\n"
-                "Expected ${type} to match:\n${expect_content}\n"
-                "Actual ${type}:\n${actual_content}\n"
+                    "Expected ${type} to match:\n${expect_content}\n"
+                    "Actual ${type}:\n${actual_content}\n"
             )
         endif ()
     else ()
@@ -377,7 +377,7 @@ function(get_unix_uid var)
             set(ID "/usr/xpg4/bin/id")
         endif ()
         execute_process(COMMAND ${ID} -u $ENV{USER} OUTPUT_VARIABLE uid ERROR_QUIET
-            RESULT_VARIABLE status OUTPUT_STRIP_TRAILING_WHITESPACE)
+                RESULT_VARIABLE status OUTPUT_STRIP_TRAILING_WHITESPACE)
         if (status EQUAL 0)
             set("${var}" "${uid}" PARENT_SCOPE)
         endif ()
