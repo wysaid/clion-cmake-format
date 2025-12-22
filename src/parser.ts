@@ -81,6 +81,8 @@ export interface ArgumentInfo {
     inlineComment?: string;
     /** Line number of the inline comment */
     inlineCommentLine?: number;
+    /** Number of spaces before the inline comment (for alignment preservation) */
+    inlineCommentSpaces?: number;
     /** Line number of this argument (start line for multi-line arguments) */
     line?: number;
     /** End line number of this argument (for multi-line arguments like quoted strings) */
@@ -667,17 +669,20 @@ export class CMakeParser {
     private parseArguments(): ArgumentInfo[] {
         const args: ArgumentInfo[] = [];
         let consecutiveNewlines = 0;
+        let lastWhitespaceLength = 0;
 
         while (!this.isAtEnd() && this.peek().type !== TokenType.RightParen) {
             const token = this.peek();
 
             if (token.type === TokenType.Whitespace) {
+                lastWhitespaceLength = token.value.length;
                 this.advance();
                 continue;
             }
 
             if (token.type === TokenType.Newline) {
                 consecutiveNewlines++;
+                lastWhitespaceLength = 0; // Reset whitespace after newline
                 this.advance();
                 continue;
             }
@@ -687,12 +692,14 @@ export class CMakeParser {
                 if (args.length > 0 && !args[args.length - 1].inlineComment) {
                     args[args.length - 1].inlineComment = token.value;
                     args[args.length - 1].inlineCommentLine = token.line;
+                    args[args.length - 1].inlineCommentSpaces = lastWhitespaceLength;
                     // If there were blank lines before the comment, record them
                     if (consecutiveNewlines > 0) {
                         args[args.length - 1].blankLinesBefore = Math.max(args[args.length - 1].blankLinesBefore || 0, consecutiveNewlines - 1);
                     }
                 }
                 consecutiveNewlines = 0;  // Reset after comment
+                lastWhitespaceLength = 0; // Reset after comment
                 this.advance();
                 continue;
             }

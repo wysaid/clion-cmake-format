@@ -465,9 +465,15 @@ export class CMakeFormatter {
                 }
             }
 
-            // Format arguments in this group
+            // Format arguments in this group, applying CLion-style indentation for nested parens
             const formattedArgs = group.map((arg, i) => {
-                const formatted = this.formatArgument(arg);
+                let formatted: string;
+                // Check if this is a nested parentheses argument that needs re-indentation
+                if (!arg.quoted && !arg.bracket && arg.value.includes('\n') && arg.value.includes('(')) {
+                    formatted = this.reformatNestedParenArg(arg, indent, continuationIndent);
+                } else {
+                    formatted = this.formatArgument(arg);
+                }
                 // Don't add space if previous arg ends with '=' (but is not just '=' or '==') and current arg is quoted
                 const prevArg = i > 0 ? group[i - 1] : null;
                 if (prevArg && prevArg.value.endsWith('=') && prevArg.value.length > 1 && prevArg.value !== '==' && arg.quoted) {
@@ -507,7 +513,15 @@ export class CMakeFormatter {
                     line = `${continuationIndent}${formattedArgs}`;
                 }
             } else {
-                line = `${continuationIndent}${formattedArgs}`;
+                // Not first group - check if this group starts with '(' (nested parens)
+                // CLion uses command indent for lines starting with '(', continuation indent otherwise
+                const trimmedArgs = formattedArgs.trimStart();
+                if (trimmedArgs.startsWith('(')) {
+                    // Use command indent for nested parens
+                    line = `${indent}${trimmedArgs}`;
+                } else {
+                    line = `${continuationIndent}${trimmedArgs}`;
+                }
             }
 
             // Add inline comment if present
@@ -516,7 +530,9 @@ export class CMakeFormatter {
                 if (inlineCommentLine !== undefined && lastArgLine !== undefined &&
                     inlineCommentLine === lastArgLine) {
                     // Comment is on the same line, add it to the end of the line
-                    line += ' ' + inlineComment;
+                    // Preserve original spacing before the comment (for alignment)
+                    const spaces = lastArgInGroup.inlineCommentSpaces ?? 1;
+                    line += ' '.repeat(spaces) + inlineComment;
                 } else {
                     // Comment is on a different line, output it as a separate line
                     lines.push(line);
@@ -619,7 +635,9 @@ export class CMakeFormatter {
                 if (arg.inlineCommentLine !== undefined && arg.line !== undefined &&
                     arg.inlineCommentLine === arg.line) {
                     // Comment is on the same line, add it to the end of the line
-                    currentLine += ' ' + arg.inlineComment;
+                    // Preserve original spacing before the comment (for alignment)
+                    const spaces = arg.inlineCommentSpaces ?? 1;
+                    currentLine += ' '.repeat(spaces) + arg.inlineComment;
                 } else {
                     // Comment is on a different line, output it as a separate line
                     lines.push(currentLine);
@@ -662,6 +680,42 @@ export class CMakeFormatter {
         }
 
         return arg.value;
+    }
+
+    /**
+     * Re-indent a nested parentheses argument according to CLion rules.
+     * For control flow commands (if/while/elseif), CLion uses:
+     * - Command indent for lines starting with '('
+     * - Continuation indent for lines starting with other content (AND, OR, etc.)
+     */
+    private reformatNestedParenArg(arg: ArgumentInfo, commandIndent: string, continuationIndent: string): string {
+        const value = arg.value;
+        
+        // Only process if it contains newlines and looks like nested parens
+        if (!value.includes('\n')) {
+            return value;
+        }
+
+        const lines = value.split('\n');
+        const result: string[] = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmedLine = line.trimStart();
+
+            if (i === 0) {
+                // First line keeps its content as-is (no leading indent in the value itself)
+                result.push(trimmedLine);
+            } else if (trimmedLine.startsWith('(')) {
+                // Lines starting with '(' use command indent
+                result.push(commandIndent + trimmedLine);
+            } else {
+                // Other lines (AND, OR, etc.) use continuation indent
+                result.push(continuationIndent + trimmedLine);
+            }
+        }
+
+        return result.join('\n');
     }
 
     /**

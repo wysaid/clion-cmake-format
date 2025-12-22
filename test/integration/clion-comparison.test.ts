@@ -474,13 +474,13 @@ describe('CLion vs Plugin Formatting Comparison', function () {
                 }
             }
 
-            // Skip CMakeLists.txt for now (known complex issue)
-            if (file === 'cmake-official/CMakeLists.txt') {
-                console.log(`   ⏸️  ${file}: Skipped (known complex issue, to be addressed later)`);
-                fs.unlinkSync(pluginFile);
-                fs.unlinkSync(clionFile);
-                continue;
-            }
+            // // Skip CMakeLists.txt for now (known complex issue)
+            // if (file === 'cmake-official/CMakeLists.txt') {
+            //     console.log(`   ⏸️  ${file}: Skipped (known complex issue, to be addressed later)`);
+            //     fs.unlinkSync(pluginFile);
+            //     fs.unlinkSync(clionFile);
+            //     continue;
+            // }
 
             validatedDiffs.push(file);
         }
