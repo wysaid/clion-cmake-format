@@ -3,10 +3,11 @@
  *
  * This test suite compares formatting results between CLion and this plugin.
  * Strategy:
- * 1. Copy test datasets to two temporary directories
+ * 1. Copy test datasets to test/temp-data/plugin and test/temp-data/clion
  * 2. Format one with CLion, one with plugin
  * 3. Compare directories using git diff
- * 4. Keep only files with differences for debugging
+ * 4. If differences found, move them to test/test-error-results for inspection
+ * 5. Clean up test/temp-data on completion
  *
  * Requirements:
  * - CLion must be installed (tests are skipped if not found)
@@ -167,40 +168,30 @@ function formatDirectoryWithPlugin(dir: string): void {
 
 /**
  * Format all CMake files in a directory with CLion
+ * Uses directory-level formatting for much better performance
  */
 function formatDirectoryWithClion(clionPath: string, dir: string): { success: boolean; error?: string } {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    try {
+        const result = spawnSync(clionPath, ['format', '-allowDefaults', dir], {
+            encoding: 'utf-8',
+            timeout: 60000,
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
 
-    for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-
-        if (entry.isDirectory()) {
-            const result = formatDirectoryWithClion(clionPath, fullPath);
-            if (!result.success) {
-                return result;
-            }
-        } else if (entry.isFile() && (entry.name.endsWith('.cmake') || entry.name === 'CMakeLists.txt')) {
-            try {
-                const result = spawnSync(clionPath, ['format', '-allowDefaults', fullPath], {
-                    encoding: 'utf-8',
-                    timeout: 10000,
-                    stdio: ['pipe', 'pipe', 'pipe']
-                });
-
-                if (result.error) {
-                    return { success: false, error: `${fullPath}: ${result.error.message}` };
-                }
-
-                if (result.status !== 0) {
-                    return { success: false, error: `${fullPath}: ${result.stderr || 'Exit code: ' + result.status}` };
-                }
-            } catch (e: any) {
-                return { success: false, error: `${fullPath}: ${e.message}` };
-            }
+        if (result.error) {
+            return { success: false, error: result.error.message };
         }
-    }
 
-    return { success: true };
+        // CLion may return non-zero exit codes (e.g., 14) even on successful formatting
+        // Check if there's actual error output
+        if (result.status !== 0 && result.stderr && result.stderr.includes('Error')) {
+            return { success: false, error: result.stderr };
+        }
+
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
 }
 
 /**
@@ -338,12 +329,24 @@ describe('CLion vs Plugin Formatting Comparison', function () {
 
         const sourceDir = path.join(TEST_DATASETS_DIR);
 
-        // Create temp directories
-        const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'cmake-format-test-'));
-        pluginDir = path.join(tmpBase, 'plugin');
-        clionDir = path.join(tmpBase, 'clion');
+        // Use fixed paths: test/temp-data for working, test/test-error-results for errors
+        const tempDataDir = path.join(__dirname, '../temp-data');
+        const errorResultsDir = path.join(__dirname, '../test-error-results');
 
-        console.log(`\n📁 Test directories:`);
+        // Clean up previous runs
+        if (fs.existsSync(tempDataDir)) {
+            fs.rmSync(tempDataDir, { recursive: true, force: true });
+        }
+        if (fs.existsSync(errorResultsDir)) {
+            fs.rmSync(errorResultsDir, { recursive: true, force: true });
+        }
+
+        // Create working directories
+        fs.mkdirSync(tempDataDir, { recursive: true });
+        pluginDir = path.join(tempDataDir, 'plugin');
+        clionDir = path.join(tempDataDir, 'clion');
+
+        console.log(`\n📁 Working directories:`);
         console.log(`   Plugin: ${pluginDir}`);
         console.log(`   CLion:  ${clionDir}`);
 
@@ -380,9 +383,10 @@ describe('CLion vs Plugin Formatting Comparison', function () {
 
         if (!diff.hasDiff) {
             console.log(`✅ All files match!`);
-            // Clean up temp directories
+            // Clean up temp directories on success
             try {
-                fs.rmSync(tmpBase, { recursive: true, force: true });
+                fs.rmSync(tempDataDir, { recursive: true, force: true });
+                console.log(`🗑️  Cleaned up working directory`);
             } catch (e) {
                 // Ignore cleanup errors
             }
@@ -392,20 +396,36 @@ describe('CLion vs Plugin Formatting Comparison', function () {
 
         // Keep only files with differences
         console.log(`\n🔎 Found ${diff.files.length} file(s) with differences`);
-        console.log(`📝 Keeping only different files for inspection...`);
+        console.log(`📝 Keeping only different files...`);
         keepOnlyDifferences(pluginDir, clionDir);
+
+        // Move different files to test-error-results
+        console.log(`📦 Moving differences to ${errorResultsDir}...`);
+        const errorPluginDir = path.join(errorResultsDir, 'plugin');
+        const errorClionDir = path.join(errorResultsDir, 'clion');
+        fs.mkdirSync(errorResultsDir, { recursive: true });
+        fs.renameSync(pluginDir, errorPluginDir);
+        fs.renameSync(clionDir, errorClionDir);
+
+        // Clean up temp-data
+        try {
+            fs.rmSync(tempDataDir, { recursive: true, force: true });
+        } catch (e) {
+            // Ignore cleanup errors
+        }
 
         // Report differences
         console.log(`\n❌ Formatting differences found:`);
-        console.log(`   Plugin output: ${pluginDir}`);
-        console.log(`   CLion output:  ${clionDir}`);
+        console.log(`   Results saved to: ${errorResultsDir}`);
+        console.log(`   Plugin output: ${errorPluginDir}`);
+        console.log(`   CLion output:  ${errorClionDir}`);
         console.log(`\n   Files with differences:`);
 
         const detailedDiffs: string[] = [];
 
         for (const file of diff.files.sort()) {
-            const pluginFile = path.join(pluginDir, file);
-            const clionFile = path.join(clionDir, file);
+            const pluginFile = path.join(errorPluginDir, file);
+            const clionFile = path.join(errorClionDir, file);
 
             if (!fs.existsSync(pluginFile) || !fs.existsSync(clionFile)) {
                 console.log(`   - ${file} (missing in one directory)`);
@@ -440,22 +460,21 @@ describe('CLion vs Plugin Formatting Comparison', function () {
         }
 
         console.log(`\n💡 To inspect differences:`);
-        console.log(`   diff -r "${pluginDir}" "${clionDir}"`);
-        console.log(`   # Or use your favorite diff tool`);
-        console.log(`\n⚠️  Temp directories NOT cleaned up for inspection`);
+        console.log(`   cd ${errorResultsDir}`);
+        console.log(`   diff -r plugin/ clion/`);
+        console.log(`   # Or use VS Code: code --diff plugin/file.cmake clion/file.cmake`);
 
         // Fail the test with details
         assert.fail(
             `Found ${diff.files.length} file(s) with formatting differences.\n` +
-            `Inspect temp directories:\n` +
-            `  Plugin: ${pluginDir}\n` +
-            `  CLion:  ${clionDir}\n` +
+            `Results saved to: ${errorResultsDir}\n` +
+            `  Plugin: ${errorPluginDir}\n` +
+            `  CLion:  ${errorClionDir}\n` +
             `Files: ${detailedDiffs.join(', ')}`
         );
     });
 
     after(function () {
-        // Note: We intentionally don't clean up on failure to allow inspection
-        // Only clean up on success (which is handled in the test itself)
+        // Note: Errors are saved to test-error-results, temp-data is always cleaned
     });
 });
