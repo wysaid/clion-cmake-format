@@ -3,11 +3,11 @@
  *
  * This test suite compares formatting results between CLion and this plugin.
  * Strategy:
- * 1. Copy test datasets to test/temp-data/plugin and test/temp-data/clion
+ * 1. Copy test datasets to OS temp directory (to avoid CLion using project settings)
  * 2. Format one with CLion, one with plugin
  * 3. Compare directories using git diff
  * 4. If differences found, move them to test/test-error-results for inspection
- * 5. Clean up test/temp-data on completion
+ * 5. Clean up temp directory on completion
  *
  * Requirements:
  * - CLion must be installed (tests are skipped if not found)
@@ -172,7 +172,8 @@ function formatDirectoryWithPlugin(dir: string): void {
  */
 function formatDirectoryWithClion(clionPath: string, dir: string): { success: boolean; error?: string } {
     try {
-        const result = spawnSync(clionPath, ['format', '-allowDefaults', dir], {
+        // Use -R for recursive scanning of directories
+        const result = spawnSync(clionPath, ['format', '-R', '-allowDefaults', dir], {
             encoding: 'utf-8',
             timeout: 60000,
             stdio: ['pipe', 'pipe', 'pipe']
@@ -329,13 +330,15 @@ describe('CLion vs Plugin Formatting Comparison', function () {
 
         const sourceDir = path.join(TEST_DATASETS_DIR);
 
-        // Use fixed paths: test/temp-data for working, test/test-error-results for errors
-        const tempDataDir = path.join(__dirname, '../temp-data');
+        // Use /tmp directory to avoid CLion treating files as part of the project
+        // CLion may use project settings if files are inside the project directory
+        const tempBase = path.join(os.tmpdir(), 'cmake-format-test');
+        const tempDataDir = path.join(tempBase, 'working');
         const errorResultsDir = path.join(__dirname, '../test-error-results');
 
         // Clean up previous runs
-        if (fs.existsSync(tempDataDir)) {
-            fs.rmSync(tempDataDir, { recursive: true, force: true });
+        if (fs.existsSync(tempBase)) {
+            fs.rmSync(tempBase, { recursive: true, force: true });
         }
         if (fs.existsSync(errorResultsDir)) {
             fs.rmSync(errorResultsDir, { recursive: true, force: true });
@@ -385,7 +388,7 @@ describe('CLion vs Plugin Formatting Comparison', function () {
             console.log(`✅ All files match!`);
             // Clean up temp directories on success
             try {
-                fs.rmSync(tempDataDir, { recursive: true, force: true });
+                fs.rmSync(tempBase, { recursive: true, force: true });
                 console.log(`🗑️  Cleaned up working directory`);
             } catch (e) {
                 // Ignore cleanup errors
@@ -399,17 +402,19 @@ describe('CLion vs Plugin Formatting Comparison', function () {
         console.log(`📝 Keeping only different files...`);
         keepOnlyDifferences(pluginDir, clionDir);
 
-        // Move different files to test-error-results
+        // Move different files to test-error-results (use copy+delete for cross-device)
         console.log(`📦 Moving differences to ${errorResultsDir}...`);
         const errorPluginDir = path.join(errorResultsDir, 'plugin');
         const errorClionDir = path.join(errorResultsDir, 'clion');
         fs.mkdirSync(errorResultsDir, { recursive: true });
-        fs.renameSync(pluginDir, errorPluginDir);
-        fs.renameSync(clionDir, errorClionDir);
+        
+        // Copy directories (to handle cross-device moves)
+        copyDirectory(pluginDir, errorPluginDir);
+        copyDirectory(clionDir, errorClionDir);
 
-        // Clean up temp-data
+        // Clean up temp directory
         try {
-            fs.rmSync(tempDataDir, { recursive: true, force: true });
+            fs.rmSync(tempBase, { recursive: true, force: true });
         } catch (e) {
             // Ignore cleanup errors
         }
@@ -475,6 +480,6 @@ describe('CLion vs Plugin Formatting Comparison', function () {
     });
 
     after(function () {
-        // Note: Errors are saved to test-error-results, temp-data is always cleaned
+        // Note: Errors are saved to test-error-results, temp directory is always cleaned
     });
 });
