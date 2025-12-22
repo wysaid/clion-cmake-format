@@ -140,8 +140,8 @@ jobs:
           echo "⚠️ Warning: Could not query marketplace API"
           echo "exists=false" >> $GITHUB_OUTPUT
         else
-          # Check if the specific version exists (with word boundary)
-          VERSION_EXISTS=$(echo "$RESPONSE" | grep -oP "\"version\":\s*\"${VERSION}(?![\d])\"" || echo "")
+          # Check if the specific version exists (exact match with quotes and comma or closing brace after)
+          VERSION_EXISTS=$(echo "$RESPONSE" | grep -E "\"version\":\s*\"${VERSION}\"[,}]" || echo "")
           
           if [ -n "$VERSION_EXISTS" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -166,11 +166,11 @@ jobs:
       run: |
         if [ "${{ steps.validate_tag.outputs.is_stable_release }}" == "true" ]; then
           echo "Publishing as stable release to VS Code Marketplace..."
-          npx vsce publish -p "$VSCE_PAT" 2>&1 | tee publish_output.txt
+          npx vsce publish 2>&1 | tee publish_output.txt
           EXIT_CODE=$?
         else
           echo "Publishing as pre-release to VS Code Marketplace..."
-          npx vsce publish --pre-release -p "$VSCE_PAT" 2>&1 | tee publish_output.txt
+          npx vsce publish --pre-release 2>&1 | tee publish_output.txt
           EXIT_CODE=$?
         fi
         echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
