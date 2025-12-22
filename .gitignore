@@ -28,3 +28,8 @@ tmp/
 
 # VSCode test folder
 .vscode-test/
+
+# Gradle build files (in clion-test/)
+clion-test/.gradle/
+clion-test/build/
+clion-test/.idea/

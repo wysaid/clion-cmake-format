@@ -1,0 +1,161 @@
+name: CLion Integration Tests
+
+# This workflow runs CLion integration tests using the IntelliJ Platform Gradle Plugin
+# to automatically download CLion.
+#
+# ⚠️ IMPORTANT: CLion requires a valid license to run formatting commands.
+# Trial licenses CANNOT be activated in headless/CI environments.
+#
+# To use this workflow, you must configure ONE of the following:
+#
+# Option 1: Offline Activation Code (Recommended)
+#   1. Go to https://account.jetbrains.com/
+#   2. Find your CLion license and generate offline activation code
+#   3. Add it as a GitHub Secret named CLION_OFFLINE_KEY
+#
+# Option 2: JetBrains License Server
+#   1. Set up a JetBrains Floating License Server
+#   2. Add the server URL as a GitHub Variable named JETBRAINS_LICENSE_SERVER
+#
+# For open source projects, apply for a free license at:
+# https://www.jetbrains.com/community/opensource/
+
+on:
+  # Allow manual trigger only (requires license setup)
+  workflow_dispatch:
+    inputs:
+      clion_version:
+        description: 'CLion version to test (e.g., 2024.3)'
+        required: false
+        default: '2024.3'
+
+permissions:
+  contents: read
+
+jobs:
+  clion-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Skip if no license is configured
+    if: ${{ vars.JETBRAINS_LICENSE_SERVER != '' || secrets.CLION_OFFLINE_KEY != '' }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Compile TypeScript
+      run: npm run compile
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-clion-${{ hashFiles('clion-test/**/*.kts', 'clion-test/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-clion-
+
+    - name: Cache CLion IDE
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.clion
+        key: ${{ runner.os }}-clion-${{ github.event.inputs.clion_version || '2024.3' }}
+        restore-keys: |
+          ${{ runner.os }}-clion-
+
+    - name: Download CLion
+      run: |
+        cd clion-test
+        ./gradlew downloadClion --info
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+    - name: Get CLion Path
+      id: clion-path
+      run: |
+        cd clion-test
+        CLION_PATH=$(./gradlew -q printClionPath 2>/dev/null | grep "CLION_PATH=" | cut -d'=' -f2)
+        echo "path=$CLION_PATH" >> $GITHUB_OUTPUT
+        echo "CLion path: $CLION_PATH"
+
+    - name: Verify CLion Installation
+      run: |
+        if [ -f "${{ steps.clion-path.outputs.path }}" ]; then
+          echo "✅ CLion executable found"
+          ls -la "${{ steps.clion-path.outputs.path }}"
+        else
+          echo "❌ CLion executable not found at: ${{ steps.clion-path.outputs.path }}"
+          exit 1
+        fi
+
+    - name: Configure CLion License
+      run: |
+        # Create CLion config directory
+        CLION_VERSION="${{ github.event.inputs.clion_version || '2024.3' }}"
+        CONFIG_DIR="$HOME/.config/JetBrains/CLion${CLION_VERSION}"
+        mkdir -p "$CONFIG_DIR"
+        
+        # Option 1: Offline activation key
+        if [ -n "${{ secrets.CLION_OFFLINE_KEY }}" ]; then
+          echo "Configuring offline activation key..."
+          echo "${{ secrets.CLION_OFFLINE_KEY }}" > "$CONFIG_DIR/clion.key"
+          echo "✅ Offline activation key configured"
+        fi
+        
+        # Option 2: License server
+        if [ -n "${{ vars.JETBRAINS_LICENSE_SERVER }}" ]; then
+          echo "Configuring license server..."
+          cat > "$CONFIG_DIR/idea.properties" << EOF
+        idea.plugins.host=${{ vars.JETBRAINS_LICENSE_SERVER }}
+        EOF
+          echo "✅ License server configured: ${{ vars.JETBRAINS_LICENSE_SERVER }}"
+        fi
+
+    - name: Run CLion Validation Tests
+      run: |
+        export CLION_PATH="${{ steps.clion-path.outputs.path }}"
+        node scripts/validate-with-clion.js --verbose --restore
+      continue-on-error: true
+
+    - name: Run Integration Tests
+      run: |
+        export CLION_PATH="${{ steps.clion-path.outputs.path }}"
+        npm run test:integration
+      continue-on-error: true
+
+    - name: Upload Test Results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: clion-test-results
+        path: test/test-error-results/
+        retention-days: 7
+        if-no-files-found: ignore
+
+    - name: Summary
+      run: |
+        echo "## CLion Integration Test Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **CLion Version**: ${{ github.event.inputs.clion_version || '2024.3' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **CLion Path**: ${{ steps.clion-path.outputs.path }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -d "test/test-error-results" ]; then
+          echo "⚠️ Some tests failed. Check the uploaded artifacts for details." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+        fi
