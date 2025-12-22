@@ -29,6 +29,8 @@ npm run test:unit
 | `npm run watch` | Watch mode compilation (auto-recompile on changes) |
 | `npm run lint` | Run ESLint to check code quality |
 | `npm run test:unit` | Run all unit tests (must pass before commit) |
+| `npm run test:clion` | Compare formatting with CLion (requires CLion installed) |
+| `npm run test:cmake-official` | Test idempotency on CMake official files |
 | `npm run package` | Package extension as `.vsix` file |
 
 ## 📂 Project Structure
@@ -120,6 +122,17 @@ Output2 === Output1  ✅
 
 Test files in `test/datasets/well-formatted/default/` are validated for idempotency.
 
+### CLion Comparison Testing
+
+To ensure compatibility with CLion's native formatter, you can run comparison tests:
+
+```bash
+# Requires CLion installed
+npm run test:clion
+```
+
+This test formats files using both CLion and this plugin, then compares the results. See [docs/CLION_COMPARISON_TESTING.md](docs/CLION_COMPARISON_TESTING.md) for details.
+
 ## 📝 Code Guidelines
 
 ### General Rules
@@ -205,6 +218,7 @@ When modifying the formatter, ensure:
 
 ## 📚 Additional Documentation
 
+- [CLion Comparison Testing](docs/CLION_COMPARISON_TESTING.md)
 - [Configuration Validation](docs/CONFIGURATION_VALIDATION.md)
 - [Create Config Command](docs/CREATE_CONFIG_COMMAND.md)
 - [Extending Tests](docs/EXTENDING_TESTS.md)

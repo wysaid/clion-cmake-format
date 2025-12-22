@@ -236,6 +236,8 @@
         "pretest": "npm run compile && npm run lint",
         "test": "npm run test:unit",
         "test:unit": "mocha --require ts-node/register 'test/**/*.test.ts'",
+        "test:clion": "node scripts/test-clion-compare.js",
+        "test:cmake-official": "node scripts/test-cmake-official.js",
         "package": "vsce package"
     },
     "devDependencies": {
