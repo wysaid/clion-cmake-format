@@ -43,7 +43,7 @@
       }
     ],
     "@typescript-eslint/semi": ["warn", "always"],
-    "curly": "warn",
+    "curly": ["warn", "multi-line"],
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
     "semi": "off"
