@@ -11,10 +11,23 @@
 提供多种使用方式：
 - 🔌 **VS Code 扩展** — [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
 - 💻 **命令行工具** — [npm 包](https://www.npmjs.com/package/cc-format)
+- 📦 **核心库** — [@cc-format/core](https://www.npmjs.com/package/@cc-format/core) 供开发者使用
 
 > **为什么选择这个格式化工具？** 精准、可配置、零麻烦。如果您重视简洁、可维护的 CMake 脚本，这就是您的选择。
 
 [English](README.md) | 简体中文
+
+## 📦 Monorepo 架构
+
+本项目采用 **monorepo** 架构组织，包含三个协同工作的包，提供全方位的 CMake 格式化解决方案：
+
+| 包 | 说明 | npm 包 |
+|---------|-------------|-------------|
+| **[@cc-format/core](packages/core/)** | 核心格式化引擎，零依赖。纯 TypeScript 解析器和格式化器，可集成到任何 JavaScript/TypeScript 项目中 | [@cc-format/core](https://www.npmjs.com/package/@cc-format/core) |
+| **[cc-format](packages/cli/)** | 命令行接口工具，用于终端使用、CI/CD 流水线和 pre-commit 钩子 | [cc-format](https://www.npmjs.com/package/cc-format) |
+| **[clion-cmake-format](packages/vscode/)** | VS Code 扩展，提供无缝编辑器集成，支持保存时自动格式化 | [Marketplace](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format) |
+
+三个包共享相同的核心格式化引擎，确保在不同环境中**结果一致**。无论您在编辑器中、通过命令行还是在自己的工具中以编程方式格式化文件，输出都是相同的。
 
 ## ✨ 为什么选择这个扩展？
 
@@ -344,6 +357,39 @@ endif ()
 | `maxBlankLines` | number | `2` | 最大连续空行数 (0-20) |
 | `maxTrailingBlankLines` | number | `1` | 文件末尾最大空行数 (>= 0，设置大数字保留所有) |
 | `enableProjectConfig` | boolean | `true` | 启用 `.cc-format.jsonc` 文件 |
+
+### 配置验证
+
+配置值会自动验证，以防止常见错误，同时对不同的编码风格保持宽容：
+
+#### 自动修正
+
+当检测到无效值时，格式化器会自动将其修正为最接近的有效值，并显示警告消息。这确保即使配置不正确，格式化也能始终成功。
+
+**验证规则：**
+
+- **缩进大小**（`tabSize`、`indentSize`、`continuationIndentSize`）：有效范围 1-16
+  - 支持紧凑（1-2 空格）和宽松（8-16 空格）的编码风格
+  - 超出此范围的值会被限制到最近的边界
+
+- **行长度**（`lineLength`）：0（不限制）或 ≥30
+  - 0 表示不限制行长度（不换行）
+  - 非零值小于 30 会被设置为 30，以防止过度换行
+  - 确保即使基本的 CMake 命令也能保持可读性
+
+- **空行数**（`maxBlankLines`）：有效范围 0-20
+  - 防止意外的过多空白
+  - 超过 20 个连续空行很少是有意为之的
+
+- **尾部空行**（`maxTrailingBlankLines`）：≥0
+  - 设置为较大的数字（如 1000）可保留所有尾部空行
+
+**警告消息示例：**
+```text
+tabSize value 0 is out of range [1, 16]. Using minimum value 1.
+lineLength value 10 is too small. Using minimum value 30.
+maxBlankLines value 25 is out of range [0, 20]. Using maximum value 20.
+```
 
 ---
 

@@ -11,11 +11,24 @@
 Available as:
 - 🔌 **VS Code Extension** — [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format)
 - 💻 **CLI Tool** — [npm package](https://www.npmjs.com/package/cc-format)
+- 📦 **Core Library** — [@cc-format/core](https://www.npmjs.com/package/@cc-format/core) for developers
 
 > **Project Codename**: `cc-format` (CLion CMake Format)
 > **Why choose this formatter?** Precision, configurability, and zero hassle. If you value clean, maintainable CMake scripts, this is for you.
 
 English | [简体中文](README.zh-CN.md)
+
+## 📦 Monorepo Structure
+
+This project is organized as a **monorepo** containing three packages that work together to provide comprehensive CMake formatting solutions:
+
+| Package | Description | npm Package |
+|---------|-------------|-------------|
+| **[@cc-format/core](packages/core/)** | Core formatting engine with zero dependencies. Pure TypeScript parser and formatter that can be integrated into any JavaScript/TypeScript project | [@cc-format/core](https://www.npmjs.com/package/@cc-format/core) |
+| **[cc-format](packages/cli/)** | Command-line interface tool for terminal usage, CI/CD pipelines, and pre-commit hooks | [cc-format](https://www.npmjs.com/package/cc-format) |
+| **[clion-cmake-format](packages/vscode/)** | VS Code extension providing seamless editor integration with format-on-save support | [Marketplace](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format) |
+
+All three packages share the same core formatting engine, ensuring **consistent results** across different environments. Whether you format files in your editor, via command line, or programmatically in your own tools, the output is identical.
 
 ## ✨ Why This Extension?
 
@@ -346,6 +359,38 @@ Create `.cc-format.jsonc` in your project root:
 | `maxTrailingBlankLines` | number | `1` | Max blank lines at end of file (>= 0, set large number to keep all) |
 | `enableProjectConfig` | boolean | `true` | Enable `.cc-format.jsonc` files |
 
+### Configuration Validation
+
+Configuration values are automatically validated to prevent common mistakes while remaining permissive for diverse coding styles:
+
+#### Automatic Corrections
+
+When an invalid value is detected, the formatter automatically corrects it to the nearest valid value and displays a warning message. This ensures formatting always succeeds even with incorrect configuration.
+
+**Validation Rules:**
+
+- **Indent sizes** (`tabSize`, `indentSize`, `continuationIndentSize`): Valid range 1-16
+  - Supports both compact (1-2 spaces) and spacious (8-16 spaces) coding styles
+  - Values outside this range are clamped to nearest boundary
+
+- **Line length** (`lineLength`): 0 (unlimited) or ≥30
+  - 0 means unlimited line length (no wrapping)
+  - Non-zero values below 30 are set to 30 to prevent excessive wrapping
+  - Ensures even basic CMake commands remain readable
+
+- **Blank lines** (`maxBlankLines`): Valid range 0-20
+  - Prevents accidental excessive whitespace
+  - More than 20 consecutive blank lines is rarely intentional
+
+- **Trailing blank lines** (`maxTrailingBlankLines`): ≥0
+  - Set to a large number (e.g., 1000) to keep all trailing blank lines
+
+**Example Warning Messages:**
+```text
+tabSize value 0 is out of range [1, 16]. Using minimum value 1.
+lineLength value 10 is too small. Using minimum value 30.
+maxBlankLines value 25 is out of range [0, 20]. Using maximum value 20.
+```
 ---
 
 ## 💡 Tips & Best Practices
