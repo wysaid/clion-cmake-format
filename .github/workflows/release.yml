@@ -71,15 +71,15 @@ jobs:
         TAG="${{ steps.trigger_type.outputs.tag }}"
         IS_DRY_RUN="${{ steps.trigger_type.outputs.is_dry_run }}"
         IS_MANUAL="${{ steps.trigger_type.outputs.is_manual }}"
-        
+
         # Remove 'v' prefix if present for pattern matching
         TAG_WITHOUT_V="${TAG#v}"
-        
+
         # Check if tag matches stable release pattern (e.g., v1.0.3, 1.0.3)
         if echo "$TAG_WITHOUT_V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
           echo "is_stable_release=true" >> $GITHUB_OUTPUT
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          
+
           # Manual triggers never publish
           if [ "$IS_MANUAL" == "true" ]; then
             echo "should_publish=false" >> $GITHUB_OUTPUT
@@ -95,7 +95,7 @@ jobs:
         elif echo "$TAG_WITHOUT_V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+-.+$'; then
           echo "is_stable_release=false" >> $GITHUB_OUTPUT
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          
+
           # Manual triggers never publish
           if [ "$IS_MANUAL" == "true" ]; then
             echo "should_publish=false" >> $GITHUB_OUTPUT
@@ -111,7 +111,7 @@ jobs:
           echo "is_stable_release=false" >> $GITHUB_OUTPUT
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
           echo "should_publish=false" >> $GITHUB_OUTPUT
-          
+
           if [ "$IS_MANUAL" == "true" ]; then
             echo "Manual trigger: Tag does not match release patterns (dry-run): $TAG"
           elif [ "$IS_DRY_RUN" == "true" ]; then
@@ -150,15 +150,15 @@ jobs:
       run: |
         TAG_VERSION="${{ steps.extract_version.outputs.version }}"
         PACKAGE_VERSION=$(node -p "require('./package.json').version")
-        
+
         echo "Tag version: $TAG_VERSION"
         echo "package.json version: $PACKAGE_VERSION"
-        
+
         if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
           echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
           exit 1
         fi
-        
+
         echo "Version check passed: $TAG_VERSION"
 
     - name: Compile TypeScript
@@ -180,15 +180,15 @@ jobs:
       run: |
         EXTENSION_ID="wysaid.clion-cmake-format"
         VERSION="${{ steps.extract_version.outputs.version }}"
-        
+
         echo "Checking if version $VERSION exists in VS Code Marketplace..."
-        
+
         # Query the marketplace API
         RESPONSE=$(curl -s -f "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery" \
           -H "Content-Type: application/json" \
           -H "Accept: application/json;api-version=3.0-preview.1" \
           -d "{\"filters\":[{\"criteria\":[{\"filterType\":7,\"value\":\"$EXTENSION_ID\"}]}],\"flags\":914}" || echo "")
-        
+
         if [ -z "$RESPONSE" ]; then
           echo "⚠️ Warning: Could not query marketplace API"
           echo "exists=false" >> $GITHUB_OUTPUT
@@ -263,20 +263,20 @@ jobs:
         VERSION="${{ steps.extract_version.outputs.version }}"
         TAG="${{ steps.trigger_type.outputs.tag }}"
         IS_STABLE="${{ steps.validate_tag.outputs.is_stable_release }}"
-        
+
         if [ "$IS_STABLE" == "true" ]; then
           echo "# 🎉 Release ${TAG}" > release_notes.md
         else
           echo "# 🚀 Pre-release ${TAG}" > release_notes.md
         fi
         echo "" >> release_notes.md
-        
+
         # Add VS Code extension info
         echo "## 📦 VS Code Extension" >> release_notes.md
         echo "" >> release_notes.md
         echo "Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wysaid.clion-cmake-format) or download the VSIX file below." >> release_notes.md
         echo "" >> release_notes.md
-        
+
         # Extract changelog from VS Code package
         if [ -f packages/vscode/CHANGELOG.md ]; then
           echo "### Changes" >> release_notes.md
@@ -289,7 +289,7 @@ jobs:
             echo "_No specific changes documented for this version._" >> release_notes.md
           fi
         fi
-        
+
         # Add CLI tool info
         echo "" >> release_notes.md
         echo "---" >> release_notes.md
@@ -306,7 +306,7 @@ jobs:
         echo "npx cc-format@${VERSION} --help" >> release_notes.md
         echo "\`\`\`" >> release_notes.md
         echo "" >> release_notes.md
-        
+
         # Extract CLI changelog
         if [ -f packages/cli/CHANGELOG.md ]; then
           echo "### Changes" >> release_notes.md
@@ -318,7 +318,7 @@ jobs:
             echo "_No specific changes documented for this version._" >> release_notes.md
           fi
         fi
-        
+
         # Add core library info
         echo "" >> release_notes.md
         echo "---" >> release_notes.md
@@ -331,7 +331,7 @@ jobs:
         echo "npm install @cc-format/core@${VERSION}" >> release_notes.md
         echo "\`\`\`" >> release_notes.md
         echo "" >> release_notes.md
-        
+
         # Extract core changelog
         if [ -f packages/core/CHANGELOG.md ]; then
           echo "### Changes" >> release_notes.md
@@ -343,12 +343,12 @@ jobs:
             echo "_No specific changes documented for this version._" >> release_notes.md
           fi
         fi
-        
+
         echo "" >> release_notes.md
         echo "---" >> release_notes.md
         echo "" >> release_notes.md
         echo "**Full Changelog**: https://github.com/wysaid/clion-cmake-format/commits/${TAG}" >> release_notes.md
-        
+
         cat release_notes.md
 
     - name: Create GitHub Release
