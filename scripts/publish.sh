@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Publish script for clion-cmake-format monorepo
-# Supports publishing CLI tool (npm) and VS Code extension (marketplace)
+# Supports publishing core package, CLI tool (npm) and VS Code extension (marketplace)
 
 set -e
 
@@ -22,6 +22,10 @@ PUBLISH_TARGET=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
+    --core)
+        PUBLISH_TARGET="core"
+        shift
+        ;;
     --cli)
         PUBLISH_TARGET="cli"
         shift
@@ -46,7 +50,8 @@ while [[ $# -gt 0 ]]; do
         echo "Usage: $0 [TARGET] [OPTIONS]"
         echo ""
         echo "Targets:"
-        echo "  --cli              Publish CLI tool (cc-format) to npm"
+        echo "  --core             Publish @cc-format/core package to npm"
+        echo "  --cli              Publish CLI tool (cc-format) to npm (requires core to be published first)"
         echo "  --vsc              Publish VS Code extension to marketplace"
         echo ""
         echo "Options:"
@@ -56,9 +61,12 @@ while [[ $# -gt 0 ]]; do
         echo "  -h, --help         Show this help message"
         echo ""
         echo "Examples:"
+        echo "  $0 --core          # Publish @cc-format/core package"
         echo "  $0 --cli -n        # Test CLI packaging (dry run)"
         echo "  $0 --vsc           # Publish VS Code extension"
         echo "  $0                 # Interactive mode (choose target)"
+        echo ""
+        echo "Note: CLI tool depends on @cc-format/core, so publish core first."
         exit 0
         ;;
     *)
@@ -110,11 +118,18 @@ ask_yes_no() {
 get_version() {
     local package_path="$1"
     if command -v node >/dev/null 2>&1; then
-        node -p "require('${package_path}').version"
+        # Use absolute path to ensure it works regardless of current directory
+        node -p "require('$PWD/${package_path}').version"
     else
         # Fallback to grep/sed if node is not available
         grep -o '"version": *"[^"]*"' "$package_path" | sed 's/"version": *"\(.*\)"/\1/'
     fi
+}
+
+# Get published version from npm
+get_npm_published_version() {
+    local package_name="$1"
+    npm view "$package_name" version 2>/dev/null || echo "not-published"
 }
 
 # Get default branch name (usually 'main' or 'master')
@@ -130,17 +145,23 @@ select_target() {
     echo -e "${BLUE}════════════════════════════════════════════════════════${NC}"
     echo ""
     echo "Select package to publish:"
-    echo "  1) cc-format CLI tool (npm)"
-    echo "  2) clion-cmake-format VS Code extension (marketplace)"
+    echo "  1) @cc-format/core (npm)"
+    echo "  2) cc-format CLI tool (npm)"
+    echo "  3) clion-cmake-format VS Code extension (marketplace)"
     echo "  0) Cancel"
     echo ""
-    read -p "Enter your choice [0-2]: " choice
+    echo -e "${YELLOW}Note: CLI tool depends on @cc-format/core, publish core first.${NC}"
+    echo ""
+    read -p "Enter your choice [0-3]: " choice
 
     case $choice in
     1)
-        PUBLISH_TARGET="cli"
+        PUBLISH_TARGET="core"
         ;;
     2)
+        PUBLISH_TARGET="cli"
+        ;;
+    3)
         PUBLISH_TARGET="vscode"
         ;;
     0)
@@ -166,7 +187,11 @@ if [ "$DRY_RUN" = true ]; then
 fi
 
 # Set package-specific paths
-if [ "$PUBLISH_TARGET" = "cli" ]; then
+if [ "$PUBLISH_TARGET" = "core" ]; then
+    PACKAGE_DIR="packages/core"
+    PACKAGE_NAME="@cc-format/core"
+    PACKAGE_JSON="${PACKAGE_DIR}/package.json"
+elif [ "$PUBLISH_TARGET" = "cli" ]; then
     PACKAGE_DIR="packages/cli"
     PACKAGE_NAME="cc-format"
     PACKAGE_JSON="${PACKAGE_DIR}/package.json"
@@ -206,7 +231,9 @@ success "Working directory is clean"
 
 # Step 2: Get version and check if tag already exists on remote
 VERSION=$(get_version "$PACKAGE_JSON")
-if [ "$PUBLISH_TARGET" = "cli" ]; then
+if [ "$PUBLISH_TARGET" = "core" ]; then
+    TAG_NAME="core-v${VERSION}"
+elif [ "$PUBLISH_TARGET" = "cli" ]; then
     TAG_NAME="cli-v${VERSION}"
 else
     TAG_NAME="v${VERSION}"
@@ -214,6 +241,75 @@ fi
 
 info "Current version: ${VERSION}"
 info "Tag to create: ${TAG_NAME}"
+
+# Check published version on npm (only for npm packages)
+if [ "$PUBLISH_TARGET" = "core" ] || [ "$PUBLISH_TARGET" = "cli" ]; then
+    PUBLISHED_VERSION=$(get_npm_published_version "$PACKAGE_NAME")
+    if [ "$PUBLISHED_VERSION" = "not-published" ]; then
+        info "Published version: not yet published"
+    else
+        info "Published version: ${PUBLISHED_VERSION}"
+
+        # Compare versions
+        if [ "$VERSION" = "$PUBLISHED_VERSION" ]; then
+            error "Current version (${VERSION}) is the same as published version (${PUBLISHED_VERSION})"
+            error "Please update the version in ${PACKAGE_JSON} before publishing"
+            error "You can use: ./scripts/bump-version.sh <new-version>"
+            exit 1
+        fi
+    fi
+fi
+
+# For CLI, check if core is published and has the same version
+if [ "$PUBLISH_TARGET" = "cli" ]; then
+    CORE_VERSION=$(get_version "packages/core/package.json")
+    CORE_PUBLISHED_VERSION=$(get_npm_published_version "@cc-format/core")
+
+    info "Required @cc-format/core version: ${CORE_VERSION}"
+    info "Published @cc-format/core version: ${CORE_PUBLISHED_VERSION}"
+
+    if [ "$CORE_PUBLISHED_VERSION" = "not-published" ]; then
+        error "@cc-format/core is not published yet"
+        error "Please publish @cc-format/core first: ./scripts/publish.sh --core"
+        exit 1
+    fi
+
+    if [ "$CORE_VERSION" != "$CORE_PUBLISHED_VERSION" ]; then
+        error "@cc-format/core version mismatch:"
+        error "  Required: ${CORE_VERSION}"
+        error "  Published: ${CORE_PUBLISHED_VERSION}"
+        error "Please publish @cc-format/core first: ./scripts/publish.sh --core"
+        exit 1
+    fi
+
+    success "@cc-format/core version ${CORE_VERSION} is already published"
+fi
+
+# Show summary and ask for confirmation
+echo ""
+echo -e "${BLUE}════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}  Publish Summary${NC}"
+echo -e "${BLUE}════════════════════════════════════════════════════════${NC}"
+echo ""
+echo "Package:          ${PACKAGE_NAME}"
+echo "Current version:  ${VERSION}"
+if [ "$PUBLISH_TARGET" = "core" ] || [ "$PUBLISH_TARGET" = "cli" ]; then
+    if [ "$PUBLISHED_VERSION" = "not-published" ]; then
+        echo "Published version: not yet published"
+    else
+        echo "Published version: ${PUBLISHED_VERSION}"
+    fi
+fi
+echo "Git tag:          ${TAG_NAME}"
+if [ "$PUBLISH_TARGET" = "vscode" ] && [ "$PRE_RELEASE" = true ]; then
+    echo "Pre-release:      yes"
+fi
+echo ""
+
+if ! ask_yes_no "Do you want to proceed with publishing?"; then
+    info "Cancelled by user"
+    exit 0
+fi
 
 if [ "$DRY_RUN" = false ]; then
     info "Checking if tag ${TAG_NAME} already exists on remote..."
@@ -295,6 +391,14 @@ else
 fi
 
 # Step 4: Build all packages
+info "Installing dependencies..."
+if [ "$DRY_RUN" = false ]; then
+    npm install
+    success "Dependencies installed"
+else
+    info "[DRY-RUN] Would run: npm install"
+fi
+
 info "Building all packages..."
 if [ "$DRY_RUN" = false ]; then
     npm run build
@@ -313,7 +417,21 @@ else
 fi
 
 # Step 6: Package and publish
-if [ "$PUBLISH_TARGET" = "cli" ]; then
+if [ "$PUBLISH_TARGET" = "core" ]; then
+    # Core package - publish to npm
+    info "Preparing to publish @cc-format/core to npm..."
+
+    if [ "$DRY_RUN" = false ]; then
+        cd "$PACKAGE_DIR"
+        info "Running: npm publish --access public"
+        npm publish --access public
+        cd ../..
+        success "@cc-format/core published to npm!"
+    else
+        info "[DRY-RUN] Would run: cd ${PACKAGE_DIR} && npm publish --access public"
+    fi
+
+elif [ "$PUBLISH_TARGET" = "cli" ]; then
     # CLI tool - publish to npm
     info "Preparing to publish CLI tool to npm..."
 
@@ -401,6 +519,11 @@ if [ "$DRY_RUN" = false ]; then
     else
         echo ""
         success "${PACKAGE_NAME} ${VERSION} has been published to npm!"
+        echo ""
+        if [ "$PUBLISH_TARGET" = "core" ]; then
+            info "Next step: You can now publish the CLI tool with:"
+            echo "  ./scripts/publish.sh --cli"
+        fi
     fi
 else
     info "[DRY-RUN] Summary:"
