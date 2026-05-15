@@ -1,7 +1,7 @@
 {
-    "name": "cc-format",
+    "name": "@cc-format/cli",
     "version": "1.5.0",
-    "description": "Professional CMake formatter with CLion-compatible style - Fast, zero-dependency command line tool for CMakeLists.txt formatting",
+    "description": "Professional code formatter for CMake and Shell scripts — Fast, zero-dependency command line tool",
     "main": "./dist/cli.js",
     "bin": {
         "cc-format": "./dist/cli.js"
@@ -10,20 +10,22 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/wysaid/clion-cmake-format",
+        "url": "https://github.com/wysaid/cc-format",
         "directory": "packages/cli"
     },
-    "homepage": "https://github.com/wysaid/clion-cmake-format#readme",
+    "homepage": "https://github.com/wysaid/cc-format#readme",
     "bugs": {
-        "url": "https://github.com/wysaid/clion-cmake-format/issues"
+        "url": "https://github.com/wysaid/cc-format/issues"
     },
     "keywords": [
         "cmake",
         "CMakeLists.txt",
+        "shell",
+        "shellscript",
+        "bash",
+        "shfmt",
         "formatter",
         "formatting",
-        "clion",
-        "jetbrains",
         "beautify",
         "indent",
         "indentation",
@@ -31,12 +33,9 @@
         "cmake format",
         "format cmake",
         "cmake formatter",
-        "cmake beautifier",
-        "cmake-format",
+        "shell-format",
         "ccformat",
-        "cc-format",
-        "clion-cmake-format",
-        "gersemi"
+        "cc-format"
     ],
     "files": [
         "dist/**/*.js",
@@ -52,6 +51,7 @@
     },
     "dependencies": {
         "@cc-format/core": "workspace:*",
+        "@cc-format/shell": "workspace:*",
         "commander": "^12.1.0"
     },
     "engines": {

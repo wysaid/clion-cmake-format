@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 /**
- * cc-format CLI - Command line tool for formatting CMake files
+ * cc-format CLI - Command line tool for formatting CMake and Shell files
  *
- * A standalone CLI tool that provides the same CMake formatting capabilities
- * as the VS Code extension. Supports project-level configuration files
- * (.cc-format.jsonc) and global configuration.
+ * A standalone CLI tool that provides CMake and Shell formatting capabilities.
+ * Supports project-level configuration files (.cc-format.jsonc) and global configuration.
  */
 
 import { Command, Option } from 'commander';
@@ -22,6 +21,13 @@ import {
     CONFIG_FILE_NAMES,
     PROJECT_URL
 } from '@cc-format/core';
+import {
+    formatShell,
+    ShellFormatOptions,
+    ShellVariant,
+    DEFAULT_SHELL_OPTIONS,
+    isShellFile
+} from '@cc-format/shell';
 
 // Package version - read from package.json
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
@@ -100,14 +106,47 @@ function getFormatterOptions(
 }
 
 /**
+ * Detect file language based on filename/extension.
+ * Returns 'cmake', 'shell', or 'unknown'.
+ */
+function detectLanguage(filePath: string): 'cmake' | 'shell' | 'unknown' {
+    const basename = path.basename(filePath);
+
+    // CMake files
+    if (basename === 'CMakeLists.txt' || basename.endsWith('.cmake')) {
+        return 'cmake';
+    }
+
+    // Shell files
+    if (isShellFile(basename)) {
+        return 'shell';
+    }
+
+    return 'unknown';
+}
+
+/**
  * Format a single file
  */
 function formatFile(
     filePath: string,
-    options: FormatterOptions,
+    cmakeOptions: FormatterOptions,
+    shellOptions: ShellFormatOptions,
     write: boolean,
-    check: boolean
-): { success: boolean; changed: boolean; error?: string } {
+    check: boolean,
+    language?: string
+): Promise<{ success: boolean; changed: boolean; error?: string }> {
+    return formatFileAsync(filePath, cmakeOptions, shellOptions, write, check, language);
+}
+
+async function formatFileAsync(
+    filePath: string,
+    cmakeOptions: FormatterOptions,
+    shellOptions: ShellFormatOptions,
+    write: boolean,
+    check: boolean,
+    language?: string
+): Promise<{ success: boolean; changed: boolean; error?: string }> {
     try {
         const absolutePath = path.resolve(filePath);
         const content = fs.readFileSync(absolutePath, 'utf-8');
@@ -115,7 +154,15 @@ function formatFile(
         // Normalize line endings to LF
         const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        const formatted = formatCMake(normalizedContent, options);
+        // Determine language
+        const lang = language || detectLanguage(absolutePath);
+
+        let formatted: string;
+        if (lang === 'shell') {
+            formatted = await formatShell(normalizedContent, shellOptions);
+        } else {
+            formatted = formatCMake(normalizedContent, cmakeOptions);
+        }
 
         // Preserve original line endings (CRLF or LF)
         const hasCRLF = content.includes('\r\n');
@@ -124,7 +171,6 @@ function formatFile(
         const changed = content !== outputContent;
 
         if (check) {
-            // In check mode, just report if file would change
             return { success: !changed, changed };
         }
 
@@ -142,7 +188,7 @@ function formatFile(
 /**
  * Format content from stdin
  */
-function formatStdin(options: FormatterOptions): void {
+function formatStdin(cmakeOptions: FormatterOptions, shellOptions: ShellFormatOptions, language?: string): void {
     let content = '';
     process.stdin.setEncoding('utf-8');
 
@@ -150,10 +196,16 @@ function formatStdin(options: FormatterOptions): void {
         content += chunk;
     });
 
-    process.stdin.on('end', () => {
+    process.stdin.on('end', async () => {
         // Normalize line endings to LF
         const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        const formatted = formatCMake(normalizedContent, options);
+
+        let formatted: string;
+        if (language === 'shell') {
+            formatted = await formatShell(normalizedContent, shellOptions);
+        } else {
+            formatted = formatCMake(normalizedContent, cmakeOptions);
+        }
         process.stdout.write(formatted);
     });
 
@@ -163,14 +215,13 @@ function formatStdin(options: FormatterOptions): void {
     });
 
     // Important: resume() to ensure stdin flows
-    // This is necessary when stdin is already readable (e.g., piped input)
     process.stdin.resume();
 }
 
 /**
- * Find all CMake files in a directory recursively
+ * Find all formattable files in a directory recursively
  */
-function findCMakeFiles(dir: string): string[] {
+function findFormattableFiles(dir: string, language?: string): string[] {
     const files: string[] = [];
     const entries = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -183,10 +234,21 @@ function findCMakeFiles(dir: string): string[] {
         }
 
         if (entry.isDirectory()) {
-            files.push(...findCMakeFiles(fullPath));
+            files.push(...findFormattableFiles(fullPath, language));
         } else if (entry.isFile()) {
-            if (entry.name === 'CMakeLists.txt' || entry.name.endsWith('.cmake')) {
-                files.push(fullPath);
+            if (language === 'cmake') {
+                if (entry.name === 'CMakeLists.txt' || entry.name.endsWith('.cmake')) {
+                    files.push(fullPath);
+                }
+            } else if (language === 'shell') {
+                if (isShellFile(entry.name)) {
+                    files.push(fullPath);
+                }
+            } else {
+                // No specific language — collect both
+                if (entry.name === 'CMakeLists.txt' || entry.name.endsWith('.cmake') || isShellFile(entry.name)) {
+                    files.push(fullPath);
+                }
             }
         }
     }
@@ -282,23 +344,35 @@ function main(): void {
 
     program
         .name('cc-format')
-        .description(`CMake file formatter - CLion compatible formatting style\n\nProject: ${PROJECT_URL}`)
+        .description(`Code formatter for CMake and Shell scripts\n\nProject: ${PROJECT_URL}`)
         .version(version)
-        .argument('[files...]', 'CMake files or directories to format')
+        .argument('[files...]', 'Files or directories to format')
         .option('-w, --write', 'Write formatted output back to files', false)
         .option('-c, --check', 'Check if files are formatted (exit with error if not)', false)
         .option('--stdin', 'Read from stdin and write to stdout')
+        .option('-l, --language <lang>', 'Language to format: cmake, shell (auto-detected by default)')
         .option('--no-project-config', 'Ignore project-level .cc-format.jsonc files')
         .addOption(
-            new Option('--command-case <case>', 'Command case transformation')
+            new Option('--command-case <case>', 'CMake: Command case transformation')
                 .choices(['unchanged', 'lowercase', 'uppercase'])
         )
-        .option('--indent-size <size>', 'Number of spaces for indentation', parseInt)
-        .option('--tab-size <size>', 'Number of spaces per tab', parseInt)
-        .option('--use-tabs', 'Use tabs instead of spaces')
-        .option('--continuation-indent-size <size>', 'Continuation line indent size', parseInt)
-        .option('--line-length <length>', 'Maximum line length (0 for unlimited)', parseInt)
-        .option('--max-blank-lines <count>', 'Maximum consecutive blank lines', parseInt)
+        .option('--indent-size <size>', 'CMake: Number of spaces for indentation', parseInt)
+        .option('--tab-size <size>', 'CMake: Number of spaces per tab', parseInt)
+        .option('--use-tabs', 'CMake: Use tabs instead of spaces')
+        .option('--continuation-indent-size <size>', 'CMake: Continuation line indent size', parseInt)
+        .option('--line-length <length>', 'CMake: Maximum line length (0 for unlimited)', parseInt)
+        .option('--max-blank-lines <count>', 'CMake: Maximum consecutive blank lines', parseInt)
+        .option('--shfmt-path <path>', 'Shell: Path to local shfmt binary')
+        .option('--shell-indent <size>', 'Shell: Number of spaces for indentation (0 for tabs)', parseInt)
+        .addOption(
+            new Option('--shell-variant <variant>', 'Shell: Language variant')
+                .choices(['auto', 'bash', 'posix', 'mksh', 'bats'])
+        )
+        .option('--shell-bn', 'Shell: Binary operators may start a line')
+        .option('--shell-ci', 'Shell: Indent switch case bodies')
+        .option('--shell-sr', 'Shell: Space after redirect operators')
+        .option('--shell-kp', 'Shell: Keep column alignment padding')
+        .option('--shell-fn', 'Shell: Function opening brace on next line')
         .option('--init', 'Create a .cc-format.jsonc config file in current directory')
         .option('--init-global', 'Create a global .cc-format.jsonc config file')
         .option('--config-path', 'Show path to global config file');
@@ -335,12 +409,25 @@ function main(): void {
         maxBlankLines: options.maxBlankLines
     });
 
+    // Parse shell-specific CLI options
+    const shellCliOptions: Partial<ShellFormatOptions> = {};
+    if (options.shfmtPath) shellCliOptions.shfmtPath = options.shfmtPath;
+    if (options.shellIndent !== undefined) shellCliOptions.indent = options.shellIndent;
+    if (options.shellVariant) shellCliOptions.variant = options.shellVariant as ShellVariant;
+    if (options.shellBn) shellCliOptions.binaryNextLine = true;
+    if (options.shellCi) shellCliOptions.caseIndent = true;
+    if (options.shellSr) shellCliOptions.spaceRedirects = true;
+    if (options.shellKp) shellCliOptions.keepPadding = true;
+    if (options.shellFn) shellCliOptions.functionNextLine = true;
+
     const useProjectConfig = options.projectConfig !== false;
+    const language = options.language as string | undefined;
 
     // Handle stdin
     if (options.stdin) {
-        const formatterOptions = { ...DEFAULT_OPTIONS, ...loadGlobalConfig(), ...cliOptions };
-        formatStdin(formatterOptions);
+        const cmakeOptions = { ...DEFAULT_OPTIONS, ...loadGlobalConfig(), ...cliOptions };
+        const shellOptions: ShellFormatOptions = { ...DEFAULT_SHELL_OPTIONS, ...shellCliOptions };
+        formatStdin(cmakeOptions, shellOptions, language);
         return;
     }
 
@@ -355,7 +442,7 @@ function main(): void {
 
         const stat = fs.statSync(resolvedPath);
         if (stat.isDirectory()) {
-            allFiles.push(...findCMakeFiles(resolvedPath));
+            allFiles.push(...findFormattableFiles(resolvedPath, language));
         } else {
             allFiles.push(resolvedPath);
         }
@@ -365,19 +452,37 @@ function main(): void {
         if (files.length === 0) {
             program.help();
         } else {
-            console.log('No CMake files found.');
+            console.log('No formattable files found.');
         }
         return;
     }
 
-    // Format files
+    // Format files (async for shell support)
+    runFormatting(allFiles, cliOptions, shellCliOptions, useProjectConfig, language, options).catch((err) => {
+        console.error(`Error: ${err.message}`);
+        process.exit(1);
+    });
+}
+
+/**
+ * Run formatting on collected files
+ */
+async function runFormatting(
+    allFiles: string[],
+    cliOptions: Partial<FormatterOptions>,
+    shellCliOptions: Partial<ShellFormatOptions>,
+    useProjectConfig: boolean,
+    language: string | undefined,
+    options: Record<string, unknown>
+): Promise<void> {
     let hasErrors = false;
     let changedCount = 0;
     let unchangedCount = 0;
 
     for (const file of allFiles) {
-        const formatterOptions = getFormatterOptions(file, cliOptions, useProjectConfig);
-        const result = formatFile(file, formatterOptions, options.write, options.check);
+        const cmakeOptions = getFormatterOptions(file, cliOptions, useProjectConfig);
+        const shellOptions: ShellFormatOptions = { ...DEFAULT_SHELL_OPTIONS, ...shellCliOptions };
+        const result = await formatFile(file, cmakeOptions, shellOptions, options.write as boolean, options.check as boolean, language);
 
         if (!result.success) {
             console.error(`Error: ${file}: ${result.error}`);
@@ -392,7 +497,13 @@ function main(): void {
                 // Output formatted content to stdout
                 const content = fs.readFileSync(file, 'utf-8');
                 const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-                const formatted = formatCMake(normalizedContent, formatterOptions);
+                const lang = language || detectLanguage(file);
+                let formatted: string;
+                if (lang === 'shell') {
+                    formatted = await formatShell(normalizedContent, shellOptions);
+                } else {
+                    formatted = formatCMake(normalizedContent, cmakeOptions);
+                }
                 process.stdout.write(formatted);
             }
         } else {
@@ -401,7 +512,13 @@ function main(): void {
                 // In stdout mode, output unchanged files too
                 const content = fs.readFileSync(file, 'utf-8');
                 const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-                const formatted = formatCMake(normalizedContent, formatterOptions);
+                const lang = language || detectLanguage(file);
+                let formatted: string;
+                if (lang === 'shell') {
+                    formatted = await formatShell(normalizedContent, shellOptions);
+                } else {
+                    formatted = formatCMake(normalizedContent, cmakeOptions);
+                }
                 process.stdout.write(formatted);
             }
         }

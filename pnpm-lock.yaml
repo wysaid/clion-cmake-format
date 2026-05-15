@@ -53,17 +53,29 @@ importers:
       '@cc-format/core':
         specifier: workspace:*
         version: link:../core
+      '@cc-format/shell':
+        specifier: workspace:*
+        version: link:../shell
       commander:
         specifier: ^12.1.0
         version: 12.1.0
 
   packages/core: {}
 
+  packages/shell:
+    dependencies:
+      sh-syntax:
+        specifier: ^0.5.8
+        version: 0.5.8
+
   packages/vscode:
     dependencies:
       '@cc-format/core':
         specifier: workspace:*
         version: link:../core
+      '@cc-format/shell':
+        specifier: workspace:*
+        version: link:../shell
     devDependencies:
       '@types/vscode':
         specifier: ^1.50.0
@@ -1843,6 +1855,10 @@ packages:
 
   setimmediate@1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
+
+  sh-syntax@0.5.8:
+    resolution: {integrity: sha512-JfVoxf4FxQI5qpsPbkHhZo+n6N9YMJobyl4oGEUBb/31oQYlgTjkXQD8PBiafS2UbWoxrTO0Z5PJUBXEPAG1Zw==}
+    engines: {node: '>=16.0.0'}
 
   shallow-clone@3.0.1:
     resolution: {integrity: sha512-/6KqX+GVUdqPuPPd2LxDDxzX6CAbjJehAAOKlNpqqUpAqPM6HeL8f+o3a+JsyGjn2lv0WY8UsTgUJjU9Ok55NA==}
@@ -4097,6 +4113,10 @@ snapshots:
       randombytes: 2.1.0
 
   setimmediate@1.0.5: {}
+
+  sh-syntax@0.5.8:
+    dependencies:
+      tslib: 2.8.1
 
   shallow-clone@3.0.1:
     dependencies:

@@ -19,7 +19,7 @@ import { getWebviewContent, SAMPLE_CMAKE_CODE } from './webview/configEditorHtml
  * Custom editor provider for cc-format configuration files
  */
 export class ConfigEditorProvider implements vscode.CustomTextEditorProvider {
-    public static readonly viewType = 'clionCMakeFormat.configEditor';
+    public static readonly viewType = 'ccFormat.configEditor';
 
     private static currentPanel: vscode.WebviewPanel | undefined;
     private readonly updatingDocs = new Set<string>();

@@ -1,6 +1,6 @@
 /**
  * Webpack configuration for VS Code extension
- * Bundles all code (including @cc-format/core) into a single extension.js file
+ * Bundles all code (including @cc-format/core and @cc-format/shell) into a single extension.js file
  */
 
 const path = require('path');
@@ -20,10 +20,11 @@ const config = {
         vscode: 'commonjs vscode' // The vscode-module is created on-the-fly and must be excluded
     },
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.ts', '.js', '.wasm'],
         alias: {
             // Resolve @cc-format/core to local source (development) or installed package
-            '@cc-format/core': path.resolve(__dirname, '../core/src')
+            '@cc-format/core': path.resolve(__dirname, '../core/src'),
+            '@cc-format/shell': path.resolve(__dirname, '../shell/src')
         }
     },
     module: {
