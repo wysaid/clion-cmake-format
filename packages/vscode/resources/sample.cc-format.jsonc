@@ -1,5 +1,6 @@
-// https://github.com/wysaid/clion-cmake-format
+// https://github.com/wysaid/cc-format
 {
+    // ===== CMake Formatting Options =====
     // Tab and Indentation
     "useTabs": false,
     "tabSize": 4,
@@ -27,5 +28,17 @@
     "lineLength": 0, // 0 means unlimited (default)
     "alignMultiLineArguments": false,
     "alignMultiLineParentheses": false,
-    "alignControlFlowParentheses": false
+    "alignControlFlowParentheses": false,
+    // ===== Shell Formatting Options =====
+    // Maps to shfmt flags: https://github.com/mvdan/sh
+    "shell": {
+        "indent": 0, // 0 = tabs (default), N = N spaces (-i N)
+        "binaryNextLine": false, // Binary ops may start a line (-bn)
+        "caseIndent": false, // Indent switch case bodies (-ci)
+        "spaceRedirects": false, // Space after redirect operators (-sr)
+        "keepPadding": false, // Keep column alignment (-kp)
+        "functionNextLine": false, // Function brace on next line (-fn)
+        "variant": "auto", // Language: auto, bash, posix, mksh, bats (-ln)
+        "shfmtPath": "" // Path to local shfmt binary (optional)
+    }
 }

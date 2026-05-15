@@ -1,8 +1,8 @@
 {
-    "name": "clion-cmake-format-monorepo",
+    "name": "cc-format-monorepo",
     "version": "1.5.0",
     "private": true,
-    "description": "Monorepo for CMake formatter with CLion-compatible style",
+    "description": "Monorepo for code formatters — CMake, Shell, and more",
     "packageManager": "pnpm@9.15.4",
     "engines": {
         "node": ">=18",
@@ -10,13 +10,14 @@
     },
     "scripts": {
         "preinstall": "node scripts/check-pnpm.js",
-        "build": "pnpm --filter @cc-format/core build && pnpm --filter cc-format build && pnpm --filter clion-cmake-format build",
+        "build": "pnpm --filter @cc-format/core build && pnpm --filter @cc-format/shell build && pnpm --filter @cc-format/cli build && pnpm --filter cc-format build",
         "build:core": "pnpm --filter @cc-format/core build",
-        "build:cli": "pnpm --filter cc-format build",
-        "build:vscode": "pnpm --filter clion-cmake-format build",
+        "build:shell": "pnpm --filter @cc-format/shell build",
+        "build:cli": "pnpm --filter @cc-format/cli build",
+        "build:vscode": "pnpm --filter cc-format build",
         "clean": "pnpm --recursive run clean && rm -rf dist",
         "compile": "pnpm run build",
-        "watch": "pnpm --filter clion-cmake-format run watch",
+        "watch": "pnpm --filter cc-format run watch",
         "lint": "eslint \"packages/*/src/**/*.ts\"",
         "test": "mocha \"test/**/*.test.ts\" --exclude \"test/integration/**\"",
         "test:unit": "mocha \"test/**/*.test.ts\" --exclude \"test/integration/**\"",
@@ -25,6 +26,7 @@
         "test:clion": "node scripts/validate-with-clion.js",
         "package:vscode": "bash scripts/package-vscode.sh",
         "publish:core": "cd packages/core && pnpm publish",
+        "publish:shell": "cd packages/shell && pnpm publish",
         "publish:cli": "cd packages/cli && pnpm publish",
         "publish:vscode": "cd packages/vscode && vsce publish",
         "verify-symlinks": "bash scripts/verify-symlinks.sh"
@@ -46,7 +48,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/wysaid/clion-cmake-format"
+        "url": "https://github.com/wysaid/cc-format"
     },
     "license": "MIT"
 }

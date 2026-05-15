@@ -2,8 +2,17 @@
     "extends": "./tsconfig.base.json",
     "files": [],
     "references": [
-        { "path": "./packages/core" },
-        { "path": "./packages/cli" },
-        { "path": "./packages/vscode" }
+        {
+            "path": "./packages/core"
+        },
+        {
+            "path": "./packages/shell"
+        },
+        {
+            "path": "./packages/cli"
+        },
+        {
+            "path": "./packages/vscode"
+        }
     ]
 }

@@ -39,7 +39,7 @@ describe('CLI', () => {
             const result = runCLI(['--help']);
             assert.strictEqual(result.exitCode, 0);
             assert.ok(result.stdout.includes('cc-format'));
-            assert.ok(result.stdout.includes('CMake file formatter'));
+            assert.ok(result.stdout.includes('Code formatter'));
             assert.ok(result.stdout.includes('--write'));
             assert.ok(result.stdout.includes('--check'));
             assert.ok(result.stdout.includes('--stdin'));

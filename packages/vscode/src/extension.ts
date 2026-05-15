@@ -1,8 +1,9 @@
 /**
- * VSCode Extension - CLion CMake Format (cc-format)
+ * VSCode Extension - cc-format
  *
- * Provides document formatting for CMake files using CLion's formatting style.
- * Supports project-level configuration via .cc-format.jsonc files.
+ * Provides document formatting for CMake files and Shell scripts.
+ * CMake: CLion-compatible formatting style with project-level configuration.
+ * Shell: Hybrid mode — local shfmt binary or built-in WASM formatter.
  */
 
 import * as vscode from 'vscode';
@@ -17,6 +18,12 @@ import {
     generateSampleConfig,
     DEFAULT_OPTIONS
 } from '@cc-format/core';
+import {
+    formatShell,
+    ShellFormatOptions,
+    ShellVariant,
+    clearShfmtCache
+} from '@cc-format/shell';
 import { ConfigEditorProvider } from './configEditorProvider';
 
 // Track which validation warnings have been shown to avoid repetition
@@ -96,10 +103,10 @@ function validateLineLength(value: number): number {
 }
 
 /**
- * Read formatter options from VSCode configuration
+ * Read CMake formatter options from VSCode configuration
  */
 function getVSCodeOptions(): Partial<FormatterOptions> {
-    const config = vscode.workspace.getConfiguration('clionCMakeFormatter');
+    const config = vscode.workspace.getConfiguration('ccFormat.cmake');
 
     return {
         // Tab and Indent
@@ -138,10 +145,28 @@ function getVSCodeOptions(): Partial<FormatterOptions> {
 }
 
 /**
+ * Read shell formatter options from VSCode configuration
+ */
+function getShellOptions(): Partial<ShellFormatOptions> {
+    const config = vscode.workspace.getConfiguration('ccFormat.shell');
+
+    return {
+        shfmtPath: config.get<string>('shfmtPath', ''),
+        indent: config.get<number>('indent', 0),
+        variant: config.get<ShellVariant>('variant', 'auto'),
+        binaryNextLine: config.get<boolean>('binaryNextLine', false),
+        caseIndent: config.get<boolean>('caseIndent', false),
+        spaceRedirects: config.get<boolean>('spaceRedirects', false),
+        keepPadding: config.get<boolean>('keepPadding', false),
+        functionNextLine: config.get<boolean>('functionNextLine', false),
+    };
+}
+
+/**
  * Get formatter options for a document, merging VS Code settings with project config
  */
 function getFormatterOptions(document: vscode.TextDocument): Partial<FormatterOptions> {
-    const config = vscode.workspace.getConfiguration('clionCMakeFormatter');
+    const config = vscode.workspace.getConfiguration('ccFormat.cmake');
     const vscodeOptions = getVSCodeOptions();
 
     // Check if project-level configuration is enabled
@@ -297,26 +322,71 @@ class CMakeRangeFormattingProvider implements vscode.DocumentRangeFormattingEdit
 }
 
 /**
+ * Document Formatting Provider for Shell scripts
+ */
+class ShellFormattingProvider implements vscode.DocumentFormattingEditProvider {
+    async provideDocumentFormattingEdits(
+        document: vscode.TextDocument,
+        _options: vscode.FormattingOptions,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.TextEdit[]> {
+        try {
+            const source = document.getText();
+            const options = getShellOptions();
+            const formatted = await formatShell(source, options);
+
+            // Show formatting result (non-blocking)
+            showFormattingResult(source, formatted);
+
+            // Create a text edit that replaces the entire document
+            const fullRange = new vscode.Range(
+                document.positionAt(0),
+                document.positionAt(source.length)
+            );
+
+            return [vscode.TextEdit.replace(fullRange, formatted)];
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Shell formatting error: ${message}`);
+            return [];
+        }
+    }
+}
+
+/**
  * Activate the extension
  */
 export function activate(context: vscode.ExtensionContext): void {
-    // Register the document formatting provider
+    // Register the document formatting provider for CMake
     const formattingProvider = new CMakeFormattingProvider();
     const formattingDisposable = vscode.languages.registerDocumentFormattingEditProvider(
         { language: 'cmake', scheme: 'file' },
         formattingProvider
     );
 
-    // Register the range formatting provider
+    // Register the range formatting provider for CMake
     const rangeFormattingProvider = new CMakeRangeFormattingProvider();
     const rangeFormattingDisposable = vscode.languages.registerDocumentRangeFormattingEditProvider(
         { language: 'cmake', scheme: 'file' },
         rangeFormattingProvider
     );
 
-    // Register a command to format the current CMake document
+    // Register the document formatting provider for Shell scripts
+    const shellFormattingProvider = new ShellFormattingProvider();
+    const shellFormattingDisposable = vscode.languages.registerDocumentFormattingEditProvider(
+        { language: 'shellscript', scheme: 'file' },
+        shellFormattingProvider
+    );
+
+    // Also register for untitled shell documents
+    const shellUntitledDisposable = vscode.languages.registerDocumentFormattingEditProvider(
+        { language: 'shellscript', scheme: 'untitled' },
+        shellFormattingProvider
+    );
+
+    // Register a command to format the current document
     const formatCommand = vscode.commands.registerCommand(
-        'clion-cmake-format.formatDocument',
+        'cc-format.formatDocument',
         async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor) {
@@ -324,8 +394,9 @@ export function activate(context: vscode.ExtensionContext): void {
                 return;
             }
 
-            if (editor.document.languageId !== 'cmake') {
-                vscode.window.showWarningMessage('Current document is not a CMake file');
+            const lang = editor.document.languageId;
+            if (lang !== 'cmake' && lang !== 'shellscript') {
+                vscode.window.showWarningMessage('Current document is not a CMake or Shell file');
                 return;
             }
 
@@ -335,7 +406,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Register a command to create a default configuration file
     const createConfigCommand = vscode.commands.registerCommand(
-        'clion-cmake-format.createConfig',
+        'cc-format.createConfig',
         async () => {
             let targetPath: string | undefined;
 
@@ -408,6 +479,8 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         formattingDisposable,
         rangeFormattingDisposable,
+        shellFormattingDisposable,
+        shellUntitledDisposable,
         formatCommand,
         createConfigCommand
     );
@@ -428,7 +501,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Register command to open visual config editor
     const openVisualEditorCommand = vscode.commands.registerCommand(
-        'clion-cmake-format.openVisualEditor',
+        'cc-format.openVisualEditor',
         async () => {
             await ConfigEditorProvider.openEditor(context, false);
         }
@@ -437,7 +510,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Register command to open global settings
     const openGlobalSettingsCommand = vscode.commands.registerCommand(
-        'clion-cmake-format.openGlobalSettings',
+        'cc-format.openGlobalSettings',
         async () => {
             await ConfigEditorProvider.openEditor(context, true);
         }
@@ -446,7 +519,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Register command to switch to text editor (from visual editor)
     const switchToTextEditorCommand = vscode.commands.registerCommand(
-        'clion-cmake-format.switchToTextEditor',
+        'cc-format.switchToTextEditor',
         async (uri?: vscode.Uri) => {
             if (uri) {
                 await vscode.commands.executeCommand('vscode.openWith', uri, 'default');
@@ -456,7 +529,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(switchToTextEditorCommand);
 
     // Log activation
-    console.log('CLion CMake Format extension is now active');
+    console.log('cc-format extension is now active');
 }
 
 /**
@@ -465,4 +538,5 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {
     // Clear config cache and stop file watchers
     clearConfigCache();
+    clearShfmtCache();
 }

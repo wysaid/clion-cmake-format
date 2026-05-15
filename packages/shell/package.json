@@ -1,7 +1,7 @@
 {
-    "name": "@cc-format/core",
+    "name": "@cc-format/shell",
     "version": "1.5.0",
-    "description": "Core CMake formatting engine for cc-format",
+    "description": "Shell script formatting engine for cc-format — supports shfmt binary and WASM modes",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "author": "wysaid",
@@ -9,17 +9,24 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/wysaid/cc-format",
-        "directory": "packages/core"
+        "directory": "packages/shell"
     },
     "homepage": "https://github.com/wysaid/cc-format#readme",
     "bugs": {
         "url": "https://github.com/wysaid/cc-format/issues"
     },
     "keywords": [
-        "cmake",
+        "shell",
+        "shellscript",
+        "bash",
+        "zsh",
+        "shfmt",
         "formatter",
-        "clion",
-        "parser"
+        "formatting",
+        "beautify",
+        "cc-format",
+        "shell-format",
+        "sh-syntax"
     ],
     "files": [
         "dist/**/*.js",
@@ -32,6 +39,9 @@
         "build": "tsc",
         "clean": "rm -rf dist",
         "prepublishOnly": "pnpm run build"
+    },
+    "dependencies": {
+        "sh-syntax": "^0.5.8"
     },
     "engines": {
         "node": ">=18"
