@@ -363,6 +363,16 @@ export function loadConfigFile(filePath: string): ConfigFileContent | null {
 }
 
 /**
+ * Check whether a target path is contained within a base path.
+ * Uses path.relative to avoid false positives for sibling paths
+ * that merely share a string prefix (e.g. /tmp/workspace vs /tmp/workspace2).
+ */
+function isPathWithin(basePath: string, targetPath: string): boolean {
+    const relativePath = path.relative(basePath, targetPath);
+    return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath));
+}
+
+/**
  * Find configuration file by searching up the directory tree.
  * Searches from the document's directory up to the filesystem root,
  * similar to how .clang-format is resolved. This allows a single
@@ -374,7 +384,14 @@ export function loadConfigFile(filePath: string): ConfigFileContent | null {
  */
 export function findConfigFile(documentPath: string, workspaceRoot?: string): string | null {
     let currentDir = path.dirname(documentPath);
-    const resolvedWorkspaceRoot = workspaceRoot ? path.resolve(workspaceRoot) : undefined;
+    let resolvedWorkspaceRoot: string | undefined;
+    if (workspaceRoot) {
+        try {
+            resolvedWorkspaceRoot = fs.realpathSync(path.resolve(workspaceRoot));
+        } catch {
+            resolvedWorkspaceRoot = path.resolve(workspaceRoot);
+        }
+    }
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -388,9 +405,10 @@ export function findConfigFile(documentPath: string, workspaceRoot?: string): st
                     // don't resolve to outside the workspace (security check).
                     // Files found above the workspace root are not under the
                     // control of the workspace, so no symlink check is needed.
-                    if (resolvedWorkspaceRoot && currentDir.startsWith(resolvedWorkspaceRoot)) {
-                        const rootNormalized = fs.realpathSync(resolvedWorkspaceRoot);
-                        if (!resolvedPath.startsWith(rootNormalized + path.sep) && resolvedPath !== rootNormalized) {
+                    if (resolvedWorkspaceRoot) {
+                        const currentNormalized = fs.realpathSync(currentDir);
+                        const isWithinWorkspace = isPathWithin(resolvedWorkspaceRoot, currentNormalized);
+                        if (isWithinWorkspace && !isPathWithin(resolvedWorkspaceRoot, resolvedPath)) {
                             // Config file resolves to outside workspace - skip it
                             continue;
                         }

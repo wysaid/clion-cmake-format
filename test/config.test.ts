@@ -329,6 +329,23 @@ describe('Configuration File Support', () => {
             // Should find config in parent directory above workspace root
             assert.strictEqual(found, fs.realpathSync(configPath));
         });
+
+        it('should not treat prefix-sibling directory as inside workspace root', () => {
+            const siblingDir = `${tempDir}-sibling`;
+            fs.mkdirSync(siblingDir);
+
+            try {
+                const configPath = path.join(siblingDir, '.cc-format.jsonc');
+                fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 2}`);
+
+                const documentPath = path.join(siblingDir, 'CMakeLists.txt');
+                const found = findConfigFile(documentPath, tempDir);
+
+                assert.strictEqual(found, fs.realpathSync(configPath));
+            } finally {
+                fs.rmSync(siblingDir, { recursive: true, force: true });
+            }
+        });
     });
 
     describe('loadConfigFile', () => {
