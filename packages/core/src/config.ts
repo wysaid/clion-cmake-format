@@ -363,25 +363,33 @@ export function loadConfigFile(filePath: string): ConfigFileContent | null {
 }
 
 /**
- * Find configuration file by searching up the directory tree
+ * Find configuration file by searching up the directory tree.
+ * Searches from the document's directory up to the filesystem root,
+ * similar to how .clang-format is resolved. This allows a single
+ * configuration file in a parent directory to be shared across
+ * multiple projects.
+ *
  * @param documentPath Path to the document being formatted
- * @param workspaceRoot Optional workspace root to stop searching at
+ * @param workspaceRoot Optional workspace root used for symlink security checks
  */
 export function findConfigFile(documentPath: string, workspaceRoot?: string): string | null {
     let currentDir = path.dirname(documentPath);
-    const root = workspaceRoot ? path.resolve(workspaceRoot) : path.parse(currentDir).root;
+    const resolvedWorkspaceRoot = workspaceRoot ? path.resolve(workspaceRoot) : undefined;
 
-    while (currentDir.length >= root.length) {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
         for (const configName of CONFIG_FILE_NAMES) {
             const configPath = path.join(currentDir, configName);
             if (fs.existsSync(configPath)) {
                 // Resolve symbolic links to prevent issues with links pointing outside workspace
                 try {
                     const resolvedPath = fs.realpathSync(configPath);
-                    // Verify the resolved path is still within the workspace boundaries
-                    if (workspaceRoot) {
-                        // Also resolve workspace root to handle symlinks (e.g., /var -> /private/var on macOS)
-                        const rootNormalized = fs.realpathSync(root);
+                    // For files within the workspace root, verify that symlinks
+                    // don't resolve to outside the workspace (security check).
+                    // Files found above the workspace root are not under the
+                    // control of the workspace, so no symlink check is needed.
+                    if (resolvedWorkspaceRoot && currentDir.startsWith(resolvedWorkspaceRoot)) {
+                        const rootNormalized = fs.realpathSync(resolvedWorkspaceRoot);
                         if (!resolvedPath.startsWith(rootNormalized + path.sep) && resolvedPath !== rootNormalized) {
                             // Config file resolves to outside workspace - skip it
                             continue;
@@ -397,6 +405,7 @@ export function findConfigFile(documentPath: string, workspaceRoot?: string): st
 
         const parentDir = path.dirname(currentDir);
         if (parentDir === currentDir) {
+            // Reached filesystem root
             break;
         }
         currentDir = parentDir;

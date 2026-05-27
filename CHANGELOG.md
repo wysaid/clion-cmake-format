@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-05-27
+
+### Added
+
+- **Parent directory config search** — Config file search now traverses up to the filesystem root, matching `.clang-format` behavior. A single `.cc-format.jsonc` in a parent directory can be shared across multiple projects. (fixes #34)
+
 ## [1.5.0] - 2026-01-11
 
 ### Added
@@ -348,3 +354,4 @@ npm install @cc-format/core
 ### Notes
 
 - **Intentional difference from CLion**: `break` and `continue` commands follow the same spacing rules as their parent loop (`foreach`/`while`) for consistency.
+nds follow the same spacing rules as their parent loop (`foreach`/`while`) for consistency.
