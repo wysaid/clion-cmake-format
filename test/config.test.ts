@@ -301,27 +301,49 @@ describe('Configuration File Support', () => {
 
         it('should return null when no config found', () => {
             const documentPath = path.join(tempDir, 'CMakeLists.txt');
-            const found = findConfigFile(documentPath, tempDir);
+            const found = findConfigFile(documentPath);
 
-            assert.strictEqual(found, null);
+            // With the parent-directory search behavior, a config file
+            // might exist in an ancestor directory (e.g., /tmp/.cc-format.jsonc).
+            // Only assert null if no config file exists in any ancestor.
+            if (found === null) {
+                assert.strictEqual(found, null);
+            } else {
+                // Verify the found file is a valid config file (not inside tempDir)
+                assert.ok(!found.startsWith(tempDir), 'Should not find config inside tempDir');
+            }
         });
 
-        it('should stop at workspace root', () => {
+        it('should search beyond workspace root into parent directories', () => {
             // Create config above workspace root
-            const parentDir = path.dirname(tempDir);
-            const configAbove = path.join(parentDir, '.cc-format.jsonc');
-            const configAboveExists = fs.existsSync(configAbove);
+            const configPath = path.join(tempDir, '.cc-format.jsonc');
+            fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 2}`);
 
-            // Don't write to parent if it already exists
-            if (!configAboveExists) {
-                // Create workspace subdirectory
-                const workspaceDir = path.join(tempDir, 'workspace');
-                fs.mkdirSync(workspaceDir);
+            // Create workspace subdirectory
+            const workspaceDir = path.join(tempDir, 'workspace');
+            fs.mkdirSync(workspaceDir);
 
-                const documentPath = path.join(workspaceDir, 'CMakeLists.txt');
-                const found = findConfigFile(documentPath, workspaceDir);
+            const documentPath = path.join(workspaceDir, 'CMakeLists.txt');
+            const found = findConfigFile(documentPath, workspaceDir);
 
-                assert.strictEqual(found, null);
+            // Should find config in parent directory above workspace root
+            assert.strictEqual(found, fs.realpathSync(configPath));
+        });
+
+        it('should not treat prefix-sibling directory as inside workspace root', () => {
+            const siblingDir = `${tempDir}-sibling`;
+            fs.mkdirSync(siblingDir);
+
+            try {
+                const configPath = path.join(siblingDir, '.cc-format.jsonc');
+                fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 2}`);
+
+                const documentPath = path.join(siblingDir, 'CMakeLists.txt');
+                const found = findConfigFile(documentPath, tempDir);
+
+                assert.strictEqual(found, fs.realpathSync(configPath));
+            } finally {
+                fs.rmSync(siblingDir, { recursive: true, force: true });
             }
         });
     });

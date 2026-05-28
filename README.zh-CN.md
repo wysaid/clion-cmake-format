@@ -118,7 +118,7 @@
 
 1. 打开命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`）
 2. 运行 **"CLion CMake 格式化工具: 创建默认配置文件"**
-3. 在项目根目录编辑 `.cc-format.jsonc`
+3. 在项目根目录（或任意父目录）编辑 `.cc-format.jsonc`
 
 更改会自动应用 — 无需重启！
 
@@ -189,7 +189,7 @@ cc-format --init-global
 全局配置文件使用与项目配置相同的格式。配置优先级：
 
 1. CLI 选项（最高）
-2. 项目配置（项目目录下的 `.cc-format.jsonc`）
+2. 项目配置（从文件所在目录向上查找 `.cc-format.jsonc`，直至文件系统根目录）
 3. 全局配置（`~/.config/cc-format/.cc-format.jsonc`）
 4. 默认选项（最低）
 
@@ -257,7 +257,7 @@ endif ()
 通过以下方式自定义格式化行为：
 
 1. **VS Code 设置** — 全局或工作区级别
-2. **项目配置文件** — 项目根目录的 `.cc-format.jsonc`（优先级更高）
+2. **项目配置文件** — 从文件所在目录向上查找 `.cc-format.jsonc`，直至文件系统根目录（优先级更高）
 
 ### 常用配置选项
 
@@ -276,7 +276,7 @@ endif ()
 
 ### 项目配置文件示例
 
-在项目根目录创建 `.cc-format.jsonc`：
+在项目根目录（或任意父目录，可跨项目共享）创建 `.cc-format.jsonc`：
 
 ```jsonc
 // https://github.com/wysaid/clion-cmake-format

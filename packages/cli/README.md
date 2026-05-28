@@ -83,7 +83,7 @@ echo 'project(Test)' | cc-format --stdin
 
 ## Configuration
 
-Create a `.cc-format.jsonc` file in your project root:
+Create a `.cc-format.jsonc` file in your project root (or any parent directory):
 
 ```jsonc
 {
@@ -107,7 +107,7 @@ cc-format --config-path
 Settings priority:
 
 1. CLI options (highest)
-2. Project config (`.cc-format.jsonc` in project directory)
+2. Project config (`.cc-format.jsonc` — searched from file's directory up to filesystem root)
 3. Global config (`~/.config/cc-format/.cc-format.jsonc`)
 4. Default options (lowest)
 

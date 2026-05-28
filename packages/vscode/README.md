@@ -56,7 +56,7 @@ code --install-extension wysaid.clion-cmake-format
 
 ## Configuration
 
-Create a `.cc-format.jsonc` file in your project root:
+Create a `.cc-format.jsonc` file in your project root (or any parent directory):
 
 ```jsonc
 {
@@ -107,7 +107,7 @@ You can also configure the formatter in VS Code settings (`.vscode/settings.json
 
 Configuration priority (highest to lowest):
 
-1. Project config (`.cc-format.jsonc` in workspace root)
+1. Project config (`.cc-format.jsonc` — searched from file's directory up to filesystem root)
 2. VS Code workspace settings (`.vscode/settings.json`)
 3. VS Code user settings
 4. Default options
@@ -126,7 +126,7 @@ Configuration priority (highest to lowest):
 
 ## Project Configuration
 
-Place a `.cc-format.jsonc` file in your project root to apply formatting rules to the entire project:
+Place a `.cc-format.jsonc` file in your project root (or any parent directory) to apply formatting rules:
 
 ```jsonc
 // .cc-format.jsonc
@@ -172,7 +172,7 @@ target_link_libraries(myapp PRIVATE pthread)
 
 ### Configuration not being applied
 
-1. Ensure `.cc-format.jsonc` is in the workspace root (where you opened the folder in VS Code)
+1. Ensure `.cc-format.jsonc` is in the project directory or any parent directory (the extension searches upward from the file being formatted)
 2. Check that `clionCMakeFormatter.enableProjectConfig` is `true` in settings
 3. Reload VS Code (`Ctrl+Shift+P` → "Reload Window") to refresh the configuration
 4. Check for syntax errors in your `.cc-format.jsonc` file

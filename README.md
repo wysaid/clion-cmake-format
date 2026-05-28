@@ -119,7 +119,7 @@ Share formatting rules with your team:
 
 1. Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
 2. Run **"CLion CMake Format: Create Default Configuration File"**
-3. Edit `.cc-format.jsonc` in your project root
+3. Edit `.cc-format.jsonc` in your project root (or any parent directory)
 
 Changes are applied automatically — no restart needed!
 
@@ -190,7 +190,7 @@ cc-format --init-global
 The global config file uses the same format as project config files. Settings priority:
 
 1. CLI options (highest)
-2. Project config (`.cc-format.jsonc` in project directory)
+2. Project config (`.cc-format.jsonc` — searched from file's directory up to filesystem root)
 3. Global config (`~/.config/cc-format/.cc-format.jsonc`)
 4. Default options (lowest)
 
@@ -258,7 +258,7 @@ Works seamlessly with:
 Customize formatting behavior via:
 
 1. **VS Code Settings** — Global or per-workspace
-2. **Project Config File** — `.cc-format.jsonc` in your project root (takes precedence)
+2. **Project Config File** — `.cc-format.jsonc` searched from the file's directory up to filesystem root (takes precedence)
 
 ### Popular Configuration Options
 
@@ -277,7 +277,7 @@ Customize formatting behavior via:
 
 ### Sample Project Config
 
-Create `.cc-format.jsonc` in your project root:
+Create `.cc-format.jsonc` in your project root (or any parent directory to share across projects):
 
 ```jsonc
 // https://github.com/wysaid/clion-cmake-format
