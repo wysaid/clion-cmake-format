@@ -324,6 +324,37 @@ endif()`;
 
             assert.ok(output.includes('# Disable _FORTIFY_SOURCE'));
         });
+
+        it('should preserve consecutive commented-out lines in multi-line commands (issue #36)', () => {
+            const input = `set(WARNING_OPTIONS
+     -Wpacked
+    #-Wpadded
+    #-Wpedantic
+     -Wpointer-arith
+)`;
+            const output = formatCMake(input);
+            assert.ok(output.includes('#-Wpadded'), 'first commented line should be preserved');
+            assert.ok(output.includes('#-Wpedantic'), 'second consecutive commented line should be preserved');
+            assert.ok(output.includes('-Wpointer-arith'), 'subsequent argument should be preserved');
+            // Idempotency check
+            assert.strictEqual(formatCMake(output), output);
+        });
+
+        it('should preserve commented-out line after arg with inline comment (issue #36)', () => {
+            const input = `set(WARNING_OPTIONS
+     -Wpacked
+     -Wpadded # comment
+    #-Wpedantic
+     -Wpointer-arith
+)`;
+            const output = formatCMake(input);
+            assert.ok(output.includes('-Wpadded'), '-Wpadded should be preserved');
+            assert.ok(output.includes('# comment'), 'inline comment should be preserved');
+            assert.ok(output.includes('#-Wpedantic'), 'commented-out line after inline comment should be preserved');
+            assert.ok(output.includes('-Wpointer-arith'), 'subsequent argument should be preserved');
+            // Idempotency check
+            assert.strictEqual(formatCMake(output), output);
+        });
     });
 
     describe('Multi-line Preservation', () => {

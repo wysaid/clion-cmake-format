@@ -687,6 +687,14 @@ export class CMakeFormatter {
                     // Preserve original spacing before the comment (for alignment)
                     const spaces = lastArgInGroup.inlineCommentSpaces ?? 1;
                     line += ' '.repeat(spaces) + inlineComment;
+                    // Output any additional consecutive comment lines on subsequent lines
+                    if (lastArgInGroup.additionalInlineComments) {
+                        lines.push(line);
+                        for (const additionalComment of lastArgInGroup.additionalInlineComments) {
+                            lines.push(`${continuationIndent}${additionalComment}`);
+                        }
+                        line = ''; // Mark this line as added
+                    }
                 } else {
                     // Comment is on a different line, output it as a separate line
                     lines.push(line);
@@ -698,6 +706,12 @@ export class CMakeFormatter {
                         }
                     }
                     lines.push(`${continuationIndent}${inlineComment}`);
+                    // Output any additional consecutive comment lines
+                    if (lastArgInGroup.additionalInlineComments) {
+                        for (const additionalComment of lastArgInGroup.additionalInlineComments) {
+                            lines.push(`${continuationIndent}${additionalComment}`);
+                        }
+                    }
                     line = ''; // Mark this line as added
                 }
             }
@@ -809,6 +823,12 @@ export class CMakeFormatter {
                     currentLine = continuationIndent + arg.inlineComment;
                 }
                 lines.push(currentLine);
+                // Output any additional consecutive comment lines
+                if (arg.additionalInlineComments) {
+                    for (const additionalComment of arg.additionalInlineComments) {
+                        lines.push(continuationIndent + additionalComment);
+                    }
+                }
                 currentLine = continuationIndent;
             }
 
