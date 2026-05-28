@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-05-29
+
+### Fixed
+
+- **Consecutive commented-out lines in command arguments** — Formatter now preserves later commented-out lines inside multi-line command argument lists instead of dropping them when the previous argument already has an inline comment. (fixes #36)
+
 ## [1.5.1] - 2026-05-27
 
 ### Added

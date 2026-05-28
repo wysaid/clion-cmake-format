@@ -1,6 +1,6 @@
 {
     "name": "cc-format",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "description": "Professional CMake formatter with CLion-compatible style - Fast, zero-dependency command line tool for CMakeLists.txt formatting",
     "main": "./dist/cli.js",
     "bin": {
