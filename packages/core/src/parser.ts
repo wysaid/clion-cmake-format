@@ -89,6 +89,8 @@ export interface ArgumentInfo {
     endLine?: number;
     /** Number of blank lines before this argument (within command arguments) */
     blankLinesBefore?: number;
+    /** Additional consecutive comment lines following the first inlineComment (on their own lines) */
+    additionalInlineComments?: string[];
 }
 
 /**
@@ -703,6 +705,12 @@ export class CMakeParser {
                     if (consecutiveNewlines > 0) {
                         args[args.length - 1].blankLinesBefore = Math.max(args[args.length - 1].blankLinesBefore || 0, consecutiveNewlines - 1);
                     }
+                } else if (args.length > 0 && args[args.length - 1].inlineComment) {
+                    // Previous arg already has an inline comment; store additional consecutive comment lines
+                    if (!args[args.length - 1].additionalInlineComments) {
+                        args[args.length - 1].additionalInlineComments = [];
+                    }
+                    args[args.length - 1].additionalInlineComments!.push(token.value);
                 }
                 consecutiveNewlines = 0;  // Reset after comment
                 lastWhitespaceLength = 0; // Reset after comment
