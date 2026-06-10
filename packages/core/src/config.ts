@@ -7,6 +7,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { FormatterOptions, DEFAULT_OPTIONS as FORMATTER_DEFAULT_OPTIONS, CommandCase } from './formatter';
 
 // Re-export DEFAULT_OPTIONS for convenience
@@ -526,16 +527,76 @@ export function clearConfigCache(): void {
 }
 
 /**
+ * Resolve a raw config file path to an absolute path.
+ *
+ * Supports the following expansions (in order):
+ *   - `${workspaceFolder}` → replaced with `workspaceFolder` (VS Code) or `baseDir`
+ *   - `${userHome}` / leading `~` → replaced with the user's home directory
+ *   - relative paths → resolved relative to `baseDir`
+ *
+ * Only file paths are accepted (not directories); validation of existence is
+ * left to the caller.
+ *
+ * @param rawPath The raw path string from settings or CLI
+ * @param opts.baseDir  Base directory for relative paths (workspace root or cwd)
+ * @param opts.workspaceFolder  Optional explicit workspace folder to substitute for `${workspaceFolder}`
+ * @param opts.userHome Optional override for the user's home directory (useful in tests)
+ */
+export function resolveConfigFilePath(
+    rawPath: string,
+    opts: { baseDir: string; workspaceFolder?: string; userHome?: string }
+): string {
+    const homedir = opts.userHome ?? os.homedir();
+    const wsFolder = opts.workspaceFolder ?? opts.baseDir;
+
+    let resolved = rawPath;
+
+    // Expand ${workspaceFolder} (function replacement avoids `$` pattern injection)
+    resolved = resolved.replace(/\$\{workspaceFolder\}/g, () => wsFolder);
+
+    // Expand ${userHome}
+    resolved = resolved.replace(/\$\{userHome\}/g, () => homedir);
+
+    // Expand leading ~
+    if (resolved.startsWith('~/') || resolved === '~') {
+        resolved = homedir + resolved.slice(1);
+    } else if (resolved.startsWith('~' + path.sep)) {
+        resolved = homedir + resolved.slice(1);
+    }
+
+    // Resolve relative paths against baseDir
+    if (!path.isAbsolute(resolved)) {
+        resolved = path.resolve(opts.baseDir, resolved);
+    }
+
+    return resolved;
+}
+
+/**
  * Get configuration for a document
  * @param documentPath Path to the document being formatted
  * @param workspaceRoot Optional workspace root
  * @param globalOptions Global/workspace configuration from VS Code
+ * @param explicitConfigPath Optional explicit config file path (overrides tree search).
+ *   When provided:
+ *   - The file is loaded directly; `findConfigFile` is skipped entirely.
+ *   - If the file cannot be loaded, `globalOptions` is returned (strict mode – no fallback to tree search).
  */
 export function getConfigForDocument(
     documentPath: string,
     workspaceRoot?: string,
-    globalOptions: Partial<FormatterOptions> = {}
+    globalOptions: Partial<FormatterOptions> = {},
+    explicitConfigPath?: string
 ): Partial<FormatterOptions> {
+    if (explicitConfigPath) {
+        const config = getCachedConfig(explicitConfigPath);
+        if (!config) {
+            // Explicit path given but file missing/unreadable – strict mode, no tree fallback
+            return globalOptions;
+        }
+        return { ...globalOptions, ...config.options };
+    }
+
     const configPath = findConfigFile(documentPath, workspaceRoot);
 
     if (!configPath) {

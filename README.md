@@ -166,6 +166,7 @@ echo 'project(Test)' | cc-format --stdin
 | `-c, --check` | Check if files are formatted (exit 1 if not) |
 | `--stdin` | Read from stdin and write to stdout |
 | `--no-project-config` | Ignore project-level `.cc-format.jsonc` files |
+| `--config <path>` | Use a specific `.cc-format` config file (overrides automatic directory-tree search). Supports `~` and `${userHome}` expansion. Relative paths resolved from current working directory. If the file is missing, a warning is shown and defaults/global config are used (tree search is also skipped). |
 | `--command-case <case>` | Set command case: `unchanged`, `lowercase`, `uppercase` |
 | `--indent-size <size>` | Number of spaces for indentation |
 | `--use-tabs` | Use tabs instead of spaces |
@@ -190,9 +191,10 @@ cc-format --init-global
 The global config file uses the same format as project config files. Settings priority:
 
 1. CLI options (highest)
-2. Project config (`.cc-format.jsonc` — searched from file's directory up to filesystem root)
-3. Global config (`~/.config/cc-format/.cc-format.jsonc`)
-4. Default options (lowest)
+2. Explicit config file (`--config <path>` — if provided, replaces the tree search entirely)
+3. Project config (`.cc-format.jsonc` — searched from file's directory up to filesystem root)
+4. Global config (`~/.config/cc-format/.cc-format.jsonc`)
+5. Default options (lowest)
 
 ### CI/CD Integration
 
@@ -274,6 +276,7 @@ Customize formatting behavior via:
 | `spaceBeforeForeachParentheses` | `true` | Space before `foreach ()` / `endforeach ()` |
 | `alignMultiLineArguments` | `false` | Align arguments vertically |
 | `enableProjectConfig` | `true` | Enable reading `.cc-format.jsonc` files |
+| `configFilePath` | `""` | Path to a specific `.cc-format` config file. Overrides automatic directory-tree search. Supports `${workspaceFolder}`, `${userHome}`, and `~`. Empty = disabled. |
 
 ### Sample Project Config
 
@@ -381,6 +384,7 @@ Create `.cc-format.jsonc` in your project root (or any parent directory to share
 | `maxBlankLines` | number | `2` | Max consecutive blank lines (0-20) |
 | `maxTrailingBlankLines` | number | `1` | Max blank lines at end of file (>= 0, set large number to keep all) |
 | `enableProjectConfig` | boolean | `true` | Enable `.cc-format.jsonc` files |
+| `configFilePath` | string | `""` | Path to a specific `.cc-format` config file (overrides tree search). Supports `${workspaceFolder}`, `${userHome}`, `~`. |
 
 ### Configuration Validation
 
