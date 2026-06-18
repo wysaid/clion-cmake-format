@@ -33,6 +33,10 @@
         "clean": "rm -rf dist",
         "prepublishOnly": "pnpm run build"
     },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org",
+        "access": "public"
+    },
     "engines": {
         "node": ">=18"
     }

@@ -54,6 +54,10 @@
         "@cc-format/core": "workspace:*",
         "commander": "^12.1.0"
     },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org",
+        "access": "public"
+    },
     "engines": {
         "node": ">=18"
     }
