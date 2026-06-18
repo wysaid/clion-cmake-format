@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-18
+
 ### Added
 
 - **Explicit config file path** — VS Code: new `clionCMakeFormatter.configFilePath` setting to point to a shared `.cc-format` file instead of relying on automatic directory-tree search. CLI: new `--config <path>` option with the same semantics. Both support `${workspaceFolder}`, `${userHome}`, and `~` expansion. When the specified file cannot be loaded the formatter falls back to VS Code / global settings without doing a tree search (strict mode). Closes #39.
