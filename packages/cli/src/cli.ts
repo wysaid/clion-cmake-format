@@ -357,7 +357,7 @@ function main(): void {
         if (!fs.existsSync(explicitConfigPath)) {
             // Keep explicitConfigPath set so tree search is skipped (strict mode).
             // getFormatterOptions will skip project-config loading for a missing file.
-            process.stderr.write(`Warning: --config "${explicitConfigPath}" not found. Using defaults and global config only.\n`);
+            process.stderr.write(`Warning: --config "${explicitConfigPath}" not found. Using global config and CLI options only (no project-config tree search).\n`);
         }
     }
 
