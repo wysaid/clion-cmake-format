@@ -148,7 +148,6 @@ describe('CLI', () => {
     });
 
     describe('project config support', () => {
-        it('should use project config when available', () => {
             // Create a temp directory with a config file
             const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-format-test-'));
 
@@ -201,4 +200,106 @@ describe('CLI', () => {
             }
         });
     });
-});
+
+    describe('--config <path>', () => {
+        it('should use explicit config file and override tree search', () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-format-test-'));
+            try {
+                // Tree config: uppercase
+                fs.writeFileSync(path.join(tmpDir, '.cc-format.jsonc'),
+                    '// https://github.com/wysaid/clion-cmake-format\n{"commandCase": "uppercase"}');
+
+                // Explicit (shared) config: lowercase
+                const sharedConfig = path.join(tmpDir, 'shared.cc-format.jsonc');
+                fs.writeFileSync(sharedConfig,
+                    '// https://github.com/wysaid/clion-cmake-format\n{"commandCase": "lowercase"}');
+
+                const cmakePath = path.join(tmpDir, 'CMakeLists.txt');
+                fs.writeFileSync(cmakePath, 'CMAKE_MINIMUM_REQUIRED(VERSION 3.10)\n');
+
+                const result = runCLI([cmakePath, '--config', sharedConfig]);
+                assert.strictEqual(result.exitCode, 0);
+                // Explicit config should win over tree config
+                assert.ok(result.stdout.includes('cmake_minimum_required'));
+            } finally {
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
+        });
+
+        it('should warn and use defaults when explicit config file is missing', () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-format-test-'));
+            try {
+                // Tree config: lowercase (should NOT be used in strict mode)
+                fs.writeFileSync(path.join(tmpDir, '.cc-format.jsonc'),
+                    '// https://github.com/wysaid/clion-cmake-format\n{"commandCase": "lowercase"}');
+
+                const cmakePath = path.join(tmpDir, 'CMakeLists.txt');
+                fs.writeFileSync(cmakePath, 'CMAKE_MINIMUM_REQUIRED(VERSION 3.10)\n');
+
+                const missingConfig = path.join(tmpDir, 'nonexistent.cc-format.jsonc');
+                const result = runCLI([cmakePath, '--config', missingConfig]);
+                assert.strictEqual(result.exitCode, 0);
+                // Should warn on stderr
+                assert.ok(result.stderr.includes('Warning'));
+                // Strict mode: tree config not used; default commandCase is 'unchanged'
+                assert.ok(result.stdout.includes('CMAKE_MINIMUM_REQUIRED'));
+            } finally {
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
+        });
+
+        it('should apply --config together with CLI formatting flags', () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-format-test-'));
+            try {
+                // Explicit config: indentSize 2
+                const sharedConfig = path.join(tmpDir, 'shared.cc-format.jsonc');
+                fs.writeFileSync(sharedConfig,
+                    '// https://github.com/wysaid/clion-cmake-format\n{"indentSize": 2}');
+
+                const cmakePath = path.join(tmpDir, 'CMakeLists.txt');
+                fs.writeFileSync(cmakePath, 'if (TRUE)\nmessage(STATUS "hi")\nendif ()\n');
+
+                // CLI flag indentSize 4 should override explicit config's indentSize 2
+                const result = runCLI([cmakePath, '--config', sharedConfig, '--indent-size', '4']);
+                assert.strictEqual(result.exitCode, 0);
+                assert.ok(result.stdout.includes('    message'));
+            } finally {
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
+        });
+
+        it('should apply --config when used with --stdin', () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-format-test-'));
+            try {
+                const sharedConfig = path.join(tmpDir, 'shared.cc-format.jsonc');
+                fs.writeFileSync(sharedConfig,
+                    '// https://github.com/wysaid/clion-cmake-format\n{"commandCase": "lowercase"}');
+
+                const input = 'CMAKE_MINIMUM_REQUIRED(VERSION 3.10)\n';
+                const result = runCLI(['--stdin', '--config', sharedConfig], { stdin: input });
+                assert.strictEqual(result.exitCode, 0);
+                assert.ok(result.stdout.includes('cmake_minimum_required'));
+            } finally {
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
+        });
+
+        it('should take effect even when --no-project-config is set', () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-format-test-'));
+            try {
+                const sharedConfig = path.join(tmpDir, 'shared.cc-format.jsonc');
+                fs.writeFileSync(sharedConfig,
+                    '// https://github.com/wysaid/clion-cmake-format\n{"commandCase": "lowercase"}');
+
+                const cmakePath = path.join(tmpDir, 'CMakeLists.txt');
+                fs.writeFileSync(cmakePath, 'CMAKE_MINIMUM_REQUIRED(VERSION 3.10)\n');
+
+                // Explicit --config is explicit user intent; it wins over --no-project-config
+                const result = runCLI([cmakePath, '--no-project-config', '--config', sharedConfig]);
+                assert.strictEqual(result.exitCode, 0);
+                assert.ok(result.stdout.includes('cmake_minimum_required'));
+            } finally {
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
+        });
+    });

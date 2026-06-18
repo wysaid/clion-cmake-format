@@ -165,6 +165,7 @@ echo 'project(Test)' | cc-format --stdin
 | `-c, --check` | 检查文件是否已格式化（如未格式化则退出码为 1） |
 | `--stdin` | 从 stdin 读取并输出到 stdout |
 | `--no-project-config` | 忽略项目级 `.cc-format.jsonc` 文件 |
+| `--config <path>` | 使用指定的 `.cc-format` 配置文件（覆盖自动目录树查找）。支持 `~` 和 `${userHome}` 展开，相对路径基于当前工作目录。文件缺失时给出警告并使用默认/全局配置（同时跳过树查找）。 |
 | `--command-case <case>` | 设置命令大小写：`unchanged`、`lowercase`、`uppercase` |
 | `--indent-size <size>` | 缩进空格数 |
 | `--use-tabs` | 使用制表符代替空格 |
@@ -189,9 +190,10 @@ cc-format --init-global
 全局配置文件使用与项目配置相同的格式。配置优先级：
 
 1. CLI 选项（最高）
-2. 项目配置（从文件所在目录向上查找 `.cc-format.jsonc`，直至文件系统根目录）
-3. 全局配置（`~/.config/cc-format/.cc-format.jsonc`）
-4. 默认选项（最低）
+2. 显式配置文件（`--config <path>` — 若提供，完全替代树查找）
+3. 项目配置（从文件所在目录向上查找 `.cc-format.jsonc`，直至文件系统根目录）
+4. 全局配置（`~/.config/cc-format/.cc-format.jsonc`）
+5. 默认选项（最低）
 
 ### CI/CD 集成
 
@@ -273,6 +275,7 @@ endif ()
 | `spaceBeforeForeachParentheses` | `true` | `foreach ()` / `endforeach ()` 括号前空格 |
 | `alignMultiLineArguments` | `false` | 垂直对齐参数 |
 | `enableProjectConfig` | `true` | 启用读取 `.cc-format.jsonc` 文件 |
+| `configFilePath` | `""` | 指定 `.cc-format` 配置文件路径，覆盖自动目录树查找。支持 `${workspaceFolder}`、`${userHome}`、`~`，相对路径基于工作区根。为空时禁用。 |
 
 ### 项目配置文件示例
 
@@ -380,6 +383,7 @@ endif ()
 | `maxBlankLines` | number | `2` | 最大连续空行数 (0-20) |
 | `maxTrailingBlankLines` | number | `1` | 文件末尾最大空行数 (>= 0，设置大数字保留所有) |
 | `enableProjectConfig` | boolean | `true` | 启用 `.cc-format.jsonc` 文件 |
+| `configFilePath` | string | `""` | 指定 `.cc-format` 配置文件路径（覆盖树查找）。支持 `${workspaceFolder}`、`${userHome}`、`~`。 |
 
 ### 配置验证
 

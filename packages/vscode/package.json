@@ -263,6 +263,12 @@
                     "default": true,
                     "description": "%config.enableProjectConfig.description%",
                     "order": 50
+                },
+                "clionCMakeFormatter.configFilePath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "%config.configFilePath.description%",
+                    "order": 51
                 }
             }
         }

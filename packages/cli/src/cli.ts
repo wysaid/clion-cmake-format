@@ -18,6 +18,7 @@ import {
     CommandCase,
     findConfigFile,
     loadConfigFile,
+    resolveConfigFilePath,
     generateSampleConfig,
     CONFIG_FILE_NAMES,
     PROJECT_URL
@@ -68,12 +69,13 @@ function loadGlobalConfig(): Partial<FormatterOptions> {
 
 /**
  * Get formatter options for a file
- * Priority: CLI options > project config > global config > defaults
+ * Priority: CLI options > explicit config > project config > global config > defaults
  */
 function getFormatterOptions(
     filePath: string,
     cliOptions: Partial<FormatterOptions>,
-    useProjectConfig: boolean
+    useProjectConfig: boolean,
+    explicitConfigPath?: string
 ): FormatterOptions {
     // Start with defaults
     let options = { ...DEFAULT_OPTIONS };
@@ -82,8 +84,15 @@ function getFormatterOptions(
     const globalOptions = loadGlobalConfig();
     options = { ...options, ...globalOptions };
 
-    // Apply project config if enabled
-    if (useProjectConfig) {
+    if (explicitConfigPath) {
+        // Explicit config: skip tree search entirely (strict mode)
+        const config = loadConfigFile(explicitConfigPath);
+        if (config) {
+            options = { ...options, ...config.options };
+        }
+        // else: file missing/unreadable – strict mode, just use defaults+global
+    } else if (useProjectConfig) {
+        // Auto-discover project config via directory-tree search
         const configPath = findConfigFile(filePath);
         if (configPath) {
             const config = loadConfigFile(configPath);
@@ -301,7 +310,8 @@ function main(): void {
         .option('--max-blank-lines <count>', 'Maximum consecutive blank lines', parseInt)
         .option('--init', 'Create a .cc-format.jsonc config file in current directory')
         .option('--init-global', 'Create a global .cc-format.jsonc config file')
-        .option('--config-path', 'Show path to global config file');
+        .option('--config-path', 'Show path to global config file')
+        .option('--config <path>', 'Path to a specific .cc-format configuration file (overrides automatic directory-tree search). Supports ~ and ${userHome} expansion. Relative paths are resolved against the current working directory.');
 
     program.parse();
 
@@ -337,10 +347,24 @@ function main(): void {
 
     const useProjectConfig = options.projectConfig !== false;
 
+    // Resolve --config <path> if provided
+    let explicitConfigPath: string | undefined;
+    if (typeof options.config === 'string' && options.config.trim()) {
+        explicitConfigPath = resolveConfigFilePath(options.config.trim(), {
+            baseDir: process.cwd(),
+            userHome: os.homedir(),
+        });
+        if (!fs.existsSync(explicitConfigPath)) {
+            // Keep explicitConfigPath set so tree search is skipped (strict mode).
+            // getFormatterOptions will skip project-config loading for a missing file.
+            process.stderr.write(`Warning: --config "${explicitConfigPath}" not found. Using global config and CLI options only (no project-config tree search).\n`);
+        }
+    }
+
     // Handle stdin
     if (options.stdin) {
-        const formatterOptions = { ...DEFAULT_OPTIONS, ...loadGlobalConfig(), ...cliOptions };
-        formatStdin(formatterOptions);
+        const stdinOptions = getFormatterOptions(process.cwd(), cliOptions, false, explicitConfigPath);
+        formatStdin(stdinOptions);
         return;
     }
 
@@ -376,7 +400,7 @@ function main(): void {
     let unchangedCount = 0;
 
     for (const file of allFiles) {
-        const formatterOptions = getFormatterOptions(file, cliOptions, useProjectConfig);
+        const formatterOptions = getFormatterOptions(file, cliOptions, useProjectConfig, explicitConfigPath);
         const result = formatFile(file, formatterOptions, options.write, options.check);
 
         if (!result.success) {

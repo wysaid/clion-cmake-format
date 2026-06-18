@@ -13,6 +13,7 @@ import {
     FormatterOptions,
     CommandCase,
     getConfigForDocument,
+    resolveConfigFilePath,
     clearConfigCache,
     generateSampleConfig,
     DEFAULT_OPTIONS
@@ -144,18 +145,43 @@ function getFormatterOptions(document: vscode.TextDocument): Partial<FormatterOp
     const config = vscode.workspace.getConfiguration('clionCMakeFormatter');
     const vscodeOptions = getVSCodeOptions();
 
-    // Check if project-level configuration is enabled
-    const enableProjectConfig = config.get<boolean>('enableProjectConfig', true);
-    if (!enableProjectConfig) {
-        return vscodeOptions;
-    }
-
     // Get workspace root for the document
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
     const workspaceRoot = workspaceFolder?.uri.fsPath;
 
     // Get document file path
     const documentPath = document.uri.fsPath;
+
+    // Resolve explicit config file path, if set.
+    // An explicit path is an explicit user intent, so it is honored even when
+    // enableProjectConfig is false (mirrors CLI: --config wins over --no-project-config).
+    const rawConfigFilePath = config.get<string>('configFilePath', '').trim();
+    let explicitConfigPath: string | undefined;
+    if (rawConfigFilePath) {
+        explicitConfigPath = resolveConfigFilePath(rawConfigFilePath, {
+            baseDir: workspaceRoot ?? path.dirname(documentPath),
+            workspaceFolder: workspaceRoot,
+        });
+
+        // Warn once if the explicit file doesn't exist
+        if (!fs.existsSync(explicitConfigPath)) {
+            const warningKey = `configFilePath:${explicitConfigPath}`;
+            if (!shownWarnings.has(warningKey)) {
+                vscode.window.showWarningMessage(
+                    `CLion CMake Format: configFilePath "${explicitConfigPath}" not found. Using VS Code settings only.`
+                );
+                shownWarnings.add(warningKey);
+            }
+        }
+
+        return getConfigForDocument(documentPath, workspaceRoot, vscodeOptions, explicitConfigPath);
+    }
+
+    // Check if project-level configuration (tree search) is enabled
+    const enableProjectConfig = config.get<boolean>('enableProjectConfig', true);
+    if (!enableProjectConfig) {
+        return vscodeOptions;
+    }
 
     // Merge VS Code settings with project configuration file
     return getConfigForDocument(documentPath, workspaceRoot, vscodeOptions);

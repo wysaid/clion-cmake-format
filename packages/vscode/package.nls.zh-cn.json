@@ -28,6 +28,7 @@
     "config.alignMultiLineParentheses.description": "多行时对齐圆括号",
     "config.alignControlFlowParentheses.description": "多行时对齐控制流圆括号",
     "config.enableProjectConfig.description": "启用从 .cc-format.jsonc 文件读取项目级配置。禁用时，仅使用 VS Code 设置。",
+    "config.configFilePath.description": "指定 .cc-format（或 .cc-format.jsonc）配置文件的路径，覆盖自动向上目录树查找，且即使 enableProjectConfig 被禁用也会生效。支持 ${workspaceFolder}、${userHome} 和 ~ 展开，相对路径以工作区根目录为基准。若文件无法读取则仅使用 VS Code 设置（不回退到目录树查找）。",
     "command.formatDocument": "CLion CMake Format: 格式化文档",
     "command.createConfig": "CLion CMake Format: 创建默认配置文件",
     "command.openVisualEditor": "CLion CMake Format: 打开可视化配置编辑器",

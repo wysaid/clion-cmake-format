@@ -17,6 +17,7 @@ import {
     invalidateConfigCache,
     clearConfigCache,
     getConfigForDocument,
+    resolveConfigFilePath,
     CONFIG_FILE_NAMES,
     PROJECT_URL
 } from '@cc-format/core';
@@ -476,6 +477,120 @@ describe('Configuration File Support', () => {
 
         it('should prioritize .cc-format.jsonc', () => {
             assert.strictEqual(CONFIG_FILE_NAMES[0], '.cc-format.jsonc');
+        });
+    });
+
+    describe('resolveConfigFilePath', () => {
+        const fakeHome = '/home/testuser';
+
+        it('should return an absolute path unchanged', () => {
+            const abs = '/absolute/path/to/.cc-format.jsonc';
+            assert.strictEqual(
+                resolveConfigFilePath(abs, { baseDir: '/some/base', userHome: fakeHome }),
+                abs
+            );
+        });
+
+        it('should resolve relative path against baseDir', () => {
+            const result = resolveConfigFilePath('configs/.cc-format', {
+                baseDir: '/project',
+                userHome: fakeHome
+            });
+            assert.strictEqual(result, path.join('/project', 'configs', '.cc-format'));
+        });
+
+        it('should expand leading ~', () => {
+            const result = resolveConfigFilePath('~/.cc-format', {
+                baseDir: '/project',
+                userHome: fakeHome
+            });
+            assert.strictEqual(result, path.join(fakeHome, '.cc-format'));
+        });
+
+        it('should expand ${userHome}', () => {
+            const result = resolveConfigFilePath('${userHome}/.cc-format', {
+                baseDir: '/project',
+                userHome: fakeHome
+            });
+            assert.strictEqual(result, path.join(fakeHome, '.cc-format'));
+        });
+
+        it('should expand ${workspaceFolder} with explicit workspaceFolder', () => {
+            const result = resolveConfigFilePath('${workspaceFolder}/.cc-format', {
+                baseDir: '/cwd',
+                workspaceFolder: '/ws/root',
+                userHome: fakeHome
+            });
+            assert.strictEqual(result, path.join('/ws/root', '.cc-format'));
+        });
+
+        it('should fall back to baseDir for ${workspaceFolder} when workspaceFolder not provided', () => {
+            const result = resolveConfigFilePath('${workspaceFolder}/.cc-format', {
+                baseDir: '/project',
+                userHome: fakeHome
+            });
+            assert.strictEqual(result, path.join('/project', '.cc-format'));
+        });
+
+        it('should not misinterpret $-patterns in substituted values', () => {
+            // "$&" in the replacement value must be inserted literally
+            const result = resolveConfigFilePath('${workspaceFolder}/.cc-format', {
+                baseDir: '/cwd',
+                workspaceFolder: '/ws/$&dir',
+                userHome: fakeHome
+            });
+            assert.strictEqual(result, path.join('/ws/$&dir', '.cc-format'));
+        });
+    });
+
+    describe('getConfigForDocument with explicitConfigPath', () => {
+        it('should load and merge explicit config when file exists', () => {
+            const configPath = path.join(tempDir, 'shared.cc-format.jsonc');
+            fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 6}`);
+
+            const documentPath = path.join(tempDir, 'CMakeLists.txt');
+            const globalOptions = { indentSize: 2 };
+
+            const result = getConfigForDocument(documentPath, tempDir, globalOptions, configPath);
+            assert.strictEqual(result.indentSize, 6);
+        });
+
+        it('should return globalOptions (strict mode) when explicit file is missing', () => {
+            const missingPath = path.join(tempDir, 'nonexistent.cc-format.jsonc');
+
+            // Also place a tree config that should NOT be used
+            const treeConfigPath = path.join(tempDir, '.cc-format.jsonc');
+            fs.writeFileSync(treeConfigPath, `// ${PROJECT_URL}\n{"indentSize": 8}`);
+
+            const documentPath = path.join(tempDir, 'CMakeLists.txt');
+            const globalOptions = { indentSize: 4 };
+
+            const result = getConfigForDocument(documentPath, tempDir, globalOptions, missingPath);
+            // Strict mode: should not fall back to the tree config
+            assert.strictEqual(result.indentSize, 4);
+        });
+
+        it('should not use tree-search config when explicit path is provided (even when explicit loads ok)', () => {
+            // Tree config has indentSize 8, explicit config has indentSize 3
+            const treeConfigPath = path.join(tempDir, '.cc-format.jsonc');
+            fs.writeFileSync(treeConfigPath, `// ${PROJECT_URL}\n{"indentSize": 8}`);
+
+            const explicitConfigPath = path.join(tempDir, 'shared.cc-format.jsonc');
+            fs.writeFileSync(explicitConfigPath, `// ${PROJECT_URL}\n{"indentSize": 3}`);
+
+            const documentPath = path.join(tempDir, 'CMakeLists.txt');
+            const result = getConfigForDocument(documentPath, tempDir, {}, explicitConfigPath);
+            assert.strictEqual(result.indentSize, 3);
+        });
+
+        it('should ignore explicitConfigPath when undefined (backward compatibility)', () => {
+            const configPath = path.join(tempDir, '.cc-format.jsonc');
+            fs.writeFileSync(configPath, `// ${PROJECT_URL}\n{"indentSize": 7}`);
+
+            const documentPath = path.join(tempDir, 'CMakeLists.txt');
+            // No 4th arg – should behave exactly as before
+            const result = getConfigForDocument(documentPath, tempDir, {});
+            assert.strictEqual(result.indentSize, 7);
         });
     });
 });
