@@ -81,25 +81,25 @@ echo "Updating root package..."
 npm pkg set version="$NEW_VERSION"
 echo -e "${GREEN}✓${NC} Updated package.json"
 
-# Update workspaces
+# Update workspace packages
+# This is a pnpm workspace (see pnpm-workspace.yaml). The root package.json has no
+# npm "workspaces" field, so `npm pkg set -w <name>` does NOT work here. Instead run
+# `npm pkg set` inside each package via `pnpm --filter <pkg> exec`.
 echo "Updating @cc-format/core..."
-npm pkg set version="$NEW_VERSION" -w @cc-format/core
+pnpm --filter @cc-format/core exec npm pkg set version="$NEW_VERSION"
 echo -e "${GREEN}✓${NC} Updated packages/core/package.json"
 
 echo "Updating cc-format (CLI)..."
-npm pkg set version="$NEW_VERSION" -w cc-format
+pnpm --filter cc-format exec npm pkg set version="$NEW_VERSION"
 echo -e "${GREEN}✓${NC} Updated packages/cli/package.json"
 
 echo "Updating clion-cmake-format (VS Code)..."
-npm pkg set version="$NEW_VERSION" -w clion-cmake-format
+pnpm --filter clion-cmake-format exec npm pkg set version="$NEW_VERSION"
 echo -e "${GREEN}✓${NC} Updated packages/vscode/package.json"
 
-# Update @cc-format/core dependency in CLI and VSCode packages
-echo ""
-echo "Updating @cc-format/core dependency references..."
-npm pkg set dependencies.@cc-format/core="$NEW_VERSION" -w cc-format
-npm pkg set dependencies.@cc-format/core="$NEW_VERSION" -w clion-cmake-format
-echo -e "${GREEN}✓${NC} Updated @cc-format/core dependency in CLI and VSCode"
+# Note: the CLI and VS Code packages depend on @cc-format/core via the `workspace:*`
+# protocol. Do NOT pin it to a fixed version — pnpm resolves `workspace:*` to the local
+# package during development and replaces it with the real version automatically on publish.
 
 # Update lockfile
 echo ""
